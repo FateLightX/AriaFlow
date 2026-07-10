@@ -1,6 +1,8 @@
 # AriaFlow
 
-![AriaFlow app icon](docs/assets/AppIcon.png)
+<p align="center">
+  <img src="docs/assets/AppIcon.png" alt="AriaFlow app icon" width="96">
+</p>
 
 [中文](#中文) | [English](#english)
 
