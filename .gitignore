@@ -1,0 +1,25 @@
+.build/
+dist/
+.DS_Store
+.swiftpm/
+.idea/
+.vscode/
+DerivedData/
+*.xcarchive
+*.dSYM
+*.xcuserstate
+*.xcuserdata/
+*.moved-aside
+*.swp
+*.tmp
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.mobileprovision
+coverage/
+reports/
+logs/
+~/Library/Application Support/AriaFlow/
