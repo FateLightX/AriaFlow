@@ -48,10 +48,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          gh release create "$GITHUB_REF_NAME" \
+          NOTES="AriaFlow $VERSION is an ad-hoc-signed developer build for macOS 26 or later. It is not notarized; see the README for Gatekeeper guidance and third-party notices."
+          ASSETS=(
             "dist/AriaFlow-$VERSION.zip" \
             "dist/AriaFlow-$VERSION.zip.sha256" \
             "THIRD_PARTY_NOTICES.md" \
             "third_party/aria2-next/COPYING" \
-            --title "AriaFlow $VERSION" \
-            --notes "AriaFlow $VERSION is an ad-hoc-signed developer build for macOS 26 or later. It is not notarized; see the README for Gatekeeper guidance and third-party notices."
+          )
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${ASSETS[@]}" --clobber
+            gh release edit "$GITHUB_REF_NAME" --title "AriaFlow $VERSION" --notes "$NOTES"
+          else
+            gh release create "$GITHUB_REF_NAME" "${ASSETS[@]}" \
+              --title "AriaFlow $VERSION" \
+              --notes "$NOTES"
+          fi

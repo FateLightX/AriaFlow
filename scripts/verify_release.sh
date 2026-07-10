@@ -16,7 +16,10 @@ file \
     "$APP_DIR/Contents/Resources/motrix-next-engine-x86_64-apple-darwin"
 plutil -lint "$APP_DIR/Contents/Info.plist"
 codesign --verify --deep --strict --verbose=2 "$APP_DIR"
-shasum -a 256 -c "$ZIP_PATH.sha256"
+(
+    cd "$(dirname "$ZIP_PATH")"
+    shasum -a 256 -c "$(basename "$ZIP_PATH").sha256"
+)
 test -f "$APP_DIR/Contents/Resources/THIRD_PARTY_NOTICES.md"
 test -f "$APP_DIR/Contents/Resources/ThirdParty/aria2-next/COPYING"
 

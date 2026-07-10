@@ -37,7 +37,10 @@ sign_app() {
 create_zip() {
     rm -f "$ZIP_PATH"
     ditto -c -k --keepParent "$APP_DIR" "$ZIP_PATH"
-    shasum -a 256 "$ZIP_PATH" > "$CHECKSUM_PATH"
+    (
+        cd "$(dirname "$ZIP_PATH")"
+        shasum -a 256 "$(basename "$ZIP_PATH")"
+    ) > "$CHECKSUM_PATH"
 }
 
 rm -rf "$APP_DIR"
