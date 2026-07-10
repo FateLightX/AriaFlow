@@ -6,6 +6,10 @@
 
 [中文](#中文) | [English](#english)
 
+<p align="center">
+  <img src="docs/assets/AriaFlow.png" alt="AriaFlow main window" width="820">
+</p>
+
 ## 中文
 
 AriaFlow 是 macOS 原生 SwiftUI 下载客户端，使用本地随包的 `aria2-next` 引擎处理 HTTP/HTTPS、磁力链接、ED2K 和 Torrent 下载。
