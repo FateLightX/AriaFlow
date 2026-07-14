@@ -20,10 +20,12 @@ TMP_DIR="$(mktemp -d)"
 SERVER_DIR="$TMP_DIR/server"
 DOWNLOAD_DIR="$TMP_DIR/downloads"
 APP_SUPPORT_DIR="$TMP_DIR/app-support"
+BLOCKLIST_PATH="$TMP_DIR/blocklist.txt"
 BASE_PORT=$(( ( $$ % 1000 ) * 10 + 21000 ))
 HTTP_PORT="${HTTP_PORT:-$BASE_PORT}"
 RPC_PORT="${RPC_PORT:-$((BASE_PORT + 1))}"
 mkdir -p "$SERVER_DIR" "$DOWNLOAD_DIR" "$APP_SUPPORT_DIR"
+printf "# app startup blocklist\n203.0.113.0/24\n2001:db8::/32\n" > "$BLOCKLIST_PATH"
 
 cleanup() {
     [[ -n "${HTTP_PID:-}" ]] && kill "$HTTP_PID" >/dev/null 2>&1 || true
@@ -49,6 +51,7 @@ if ! curl -fsS --max-time 1 "$URL" >/dev/null; then
 fi
 
 ARIAFLOW_APP_SUPPORT_DIR="$APP_SUPPORT_DIR" \
+ARIAFLOW_SMOKE_BLOCKLIST_PATH="$BLOCKLIST_PATH" \
     "$APP_EXECUTABLE" \
     --smoke-download "$URL" "$DOWNLOAD_DIR" "$RPC_PORT"
 

@@ -15,6 +15,10 @@ let package = Package(
             resources: [
                 .copy("Resources")
             ]
+        ),
+        .testTarget(
+            name: "AriaFlowTests",
+            dependencies: ["AriaFlow"]
         )
     ]
 )

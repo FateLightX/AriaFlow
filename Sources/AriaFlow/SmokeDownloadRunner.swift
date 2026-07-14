@@ -32,6 +32,7 @@ enum SmokeDownloadRunner {
         settings.autoConnectEngine = false
         settings.downloadDirectory = downloadDirectory
         settings.rpcPort = rpcPort
+        settings.btPeerBlocklistPath = ProcessInfo.processInfo.environment["ARIAFLOW_SMOKE_BLOCKLIST_PATH"] ?? ""
 
         let engineManager = EngineManager()
         try engineManager.startIfNeeded(settings: settings, rpcSecret: secret)
@@ -39,6 +40,12 @@ enum SmokeDownloadRunner {
 
         let client = Aria2Client(port: rpcPort, token: secret)
         try waitForEngine(client: client)
+        if let expectedBlocklistPath = try PeerBlocklistFile.validatedPath(settings.btPeerBlocklistPath) {
+            let actualBlocklistPath = try client.getGlobalOptionSync()["bt-peer-blocklist"]
+            guard actualBlocklistPath == expectedBlocklistPath else {
+                throw SmokeDownloadError.blocklistNotLoaded
+            }
+        }
         let gid = try client.addUriSync([url], options: ["dir": downloadDirectory])
         try waitForDownload(gid: gid, client: client)
     }
@@ -76,6 +83,7 @@ enum SmokeDownloadRunner {
 private enum SmokeDownloadError: LocalizedError {
     case timeout
     case downloadFailed(String)
+    case blocklistNotLoaded
 
     var errorDescription: String? {
         switch self {
@@ -83,6 +91,8 @@ private enum SmokeDownloadError: LocalizedError {
             "timed out waiting for aria2"
         case .downloadFailed(let message):
             "download failed: \(message)"
+        case .blocklistNotLoaded:
+            "bundled peer blocklist was not loaded"
         }
     }
 }

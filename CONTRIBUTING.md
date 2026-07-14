@@ -1,18 +1,24 @@
-# Contributing to AriaFlow
+# Contributing
 
-## Development
+## Requirements
 
-- The deployment target is macOS 14. Release builds require Xcode 26 or a compatible Swift 6.2 toolchain.
-- Run `swift build --disable-sandbox` before opening a pull request.
-- Run `scripts/verify_release.sh` for changes that affect packaging, resources, or download behavior.
-- Keep UI copy consistent with the existing Simplified Chinese interface and document user-facing behavior in English.
+- macOS 14+
+- Xcode 26 or Swift 6.2-compatible toolchain
+
+Read [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) before changing module ownership or engine lifecycle.
+
+## Checks
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer scripts/verify_release.sh
+```
+
+Run full release verification for changes to engine behavior, resources, persistence, downloads or packaging.
 
 ## Pull Requests
 
-- Keep each pull request focused and include the behavior being changed.
-- Do not commit `dist/`, `.build/`, user settings, session data, RPC secrets, signing certificates, or notarization credentials.
-- Update tests and release documentation when changing packaging, bundled sidecars, or supported platforms.
-
-## Bundled Engine
-
-Changes to either bundled `aria2-next` sidecar must update `THIRD_PARTY_NOTICES.md`, the corresponding source record, and both SHA-256 values. Do not replace a sidecar without verifying its upstream release checksum.
+- Keep changes focused.
+- Add tests or smoke assertions for non-trivial behavior.
+- Do not commit `dist/`, `.build/`, user data, secrets, certificates or notarization credentials.
+- Sidecar changes must update `THIRD_PARTY_NOTICES.md`, both SHA-256 values and the upstream source record.

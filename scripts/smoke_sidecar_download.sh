@@ -33,6 +33,12 @@ TMP_DIR="$(mktemp -d)"
 SERVER_DIR="$TMP_DIR/server"
 DOWNLOAD_DIR="$TMP_DIR/downloads"
 mkdir -p "$SERVER_DIR" "$DOWNLOAD_DIR"
+BLOCKLIST_PATH="$TMP_DIR/blocklist.txt"
+export RELOAD_BLOCKLIST_PATH="$TMP_DIR/reload-blocklist.txt"
+INVALID_BLOCKLIST_PATH="$TMP_DIR/invalid-blocklist.txt"
+printf "# startup rules\n203.0.113.0/24\n2001:db8::/32\n" > "$BLOCKLIST_PATH"
+printf "# reload rules\n198.51.100.25\n2001:db8:abcd::/48\n" > "$RELOAD_BLOCKLIST_PATH"
+printf "not-an-ip\n" > "$INVALID_BLOCKLIST_PATH"
 
 cleanup() {
     [[ -n "${ARIA2_PID:-}" ]] && kill "$ARIA2_PID" >/dev/null 2>&1 || true
@@ -68,6 +74,8 @@ curl -fsS --max-time 1 "$URL" >/dev/null || {
     --dir="$DOWNLOAD_DIR" \
     --save-session="$TMP_DIR/download.session" \
     --log="$TMP_DIR/aria2-next.log" \
+    --log-level=info \
+    --bt-peer-blocklist="$BLOCKLIST_PATH" \
     --quiet=true >/dev/null 2>&1 &
 ARIA2_PID=$!
 sleep 0.2
@@ -84,7 +92,7 @@ rpc() {
     if [[ -n "$extra_params" ]]; then
         params="$params,$extra_params"
     fi
-    curl -fsS \
+    curl -sS \
         -H "Content-Type: application/json" \
         --data "{\"jsonrpc\":\"2.0\",\"id\":\"smoke\",\"method\":\"$method\",\"params\":[$params]}" \
         "http://127.0.0.1:$RPC_PORT/jsonrpc"
@@ -97,7 +105,51 @@ for _ in {1..40}; do
     sleep 0.25
 done
 
-rpc "aria2.getVersion" >/dev/null
+VERSION_RESPONSE="$(rpc "aria2.getVersion")"
+printf "%s" "$VERSION_RESPONSE" | "$PYTHON_BIN" -c '
+import json, sys
+version = json.load(sys.stdin)["result"]["version"]
+assert version == "2.5.1", version
+'
+
+RELOAD_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"$RELOAD_BLOCKLIST_PATH\"}")"
+printf "%s" "$RELOAD_RESPONSE" | "$PYTHON_BIN" -c '
+import json, sys
+assert json.load(sys.stdin).get("result") == "OK"
+'
+
+GLOBAL_OPTIONS_RESPONSE="$(rpc "aria2.getGlobalOption")"
+printf "%s" "$GLOBAL_OPTIONS_RESPONSE" | "$PYTHON_BIN" -c '
+import json, os, sys
+value = json.load(sys.stdin)["result"].get("bt-peer-blocklist")
+assert value == os.environ["RELOAD_BLOCKLIST_PATH"], value
+'
+
+INVALID_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"$INVALID_BLOCKLIST_PATH\"}")"
+printf "%s" "$INVALID_RESPONSE" | "$PYTHON_BIN" -c '
+import json, sys
+assert "error" in json.load(sys.stdin)
+'
+
+GLOBAL_OPTIONS_RESPONSE="$(rpc "aria2.getGlobalOption")"
+printf "%s" "$GLOBAL_OPTIONS_RESPONSE" | "$PYTHON_BIN" -c '
+import json, os, sys
+value = json.load(sys.stdin)["result"].get("bt-peer-blocklist")
+assert value == os.environ["RELOAD_BLOCKLIST_PATH"], value
+'
+
+CLEAR_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"\"}")"
+printf "%s" "$CLEAR_RESPONSE" | "$PYTHON_BIN" -c '
+import json, sys
+assert json.load(sys.stdin).get("result") == "OK"
+'
+
+GLOBAL_OPTIONS_RESPONSE="$(rpc "aria2.getGlobalOption")"
+printf "%s" "$GLOBAL_OPTIONS_RESPONSE" | "$PYTHON_BIN" -c '
+import json, sys
+value = json.load(sys.stdin)["result"].get("bt-peer-blocklist", "")
+assert value == "", value
+'
 
 ADD_RESPONSE="$(rpc "aria2.addUri" "[\"$URL\"],{\"dir\":\"$DOWNLOAD_DIR\"}")"
 GID="$(printf "%s" "$ADD_RESPONSE" | "$PYTHON_BIN" -c 'import json,sys; print(json.load(sys.stdin)["result"])')"

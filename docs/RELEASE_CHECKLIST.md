@@ -1,78 +1,42 @@
-# AriaFlow Release Checklist
+# Release Checklist
 
-Use this checklist before sharing a build outside the development machine.
-
-## Automated Verification
-
-Run from the project root:
+## Automated
 
 ```bash
-env HOME="$PWD/.build/home" \
-  XDG_CACHE_HOME="$PWD/.build/cache" \
-  CLANG_MODULE_CACHE_PATH="$PWD/.build/module-cache" \
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   scripts/verify_release.sh
 ```
 
-Expected result:
+Required results:
 
-- `dist/AriaFlow.app` exists.
-- `dist/AriaFlow-0.1.1.zip` exists.
-- `dist/AriaFlow-0.1.1.zip.sha256` verifies.
-- Main executable reports `x86_64 arm64`.
-- Both bundled sidecars exist and are executable.
-- The app bundle contains `THIRD_PARTY_NOTICES.md` and `ThirdParty/aria2-next/COPYING`.
-- Sidecar smoke download passes.
-- Packaged app smoke download passes.
+- Universal `x86_64 arm64` app
+- executable arm64 and x86_64 sidecars
+- valid `Info.plist` and code signature
+- valid ZIP SHA-256
+- bundled third-party notices and GPL text
+- passing peer-blocklist, sidecar download and packaged-app download smoke tests
 
-## Manual GUI Regression
+Artifacts:
 
-Start the packaged app:
-
-```bash
-open dist/AriaFlow.app
+```text
+dist/AriaFlow.app
+dist/AriaFlow-<version>.zip
+dist/AriaFlow-<version>.zip.sha256
 ```
 
-Check:
+## Manual
 
-- First launch connects to `aria2-next`, or shows a clear connection error with retry and settings entry.
-- Empty task list shows the connected empty state.
-- Add a small HTTP/HTTPS URL and confirm it appears in the task list.
-- Pause and resume the active task.
-- Delete the task without deleting local files.
-- Add another small task and delete it with local files enabled; verify the delete summary.
-- Add a torrent file and confirm the file selection sheet appears before download starts.
-- Add a magnet link and confirm metadata waiting state, then file selection when metadata is available.
-- Completed or failed tasks appear in History.
-- History search, open location, copy location, and clear history work.
-- Settings changes persist after closing and reopening the app.
-- Settings -> Engine can retry connection, save session, open logs, and copy diagnostics.
-- Menu bar item reflects speed when enabled and exposes show, new task, pause all, resume all, save session, clean results, and quit.
-- Dock badge appears when active tasks exist and clears when no active tasks remain.
-- Quit saves the aria2 session without hanging.
+- Launch the packaged app on macOS 14 or 15.
+- Verify main-window and menu-bar launch modes.
+- Add, pause, resume and delete an HTTP task.
+- Verify torrent/magnet file selection.
+- Verify settings persistence and peer-blocklist load/reload/clear.
+- Verify history, Dock badge and menu-bar actions.
+- On Apple Silicon, confirm the arm64 sidecar is selected.
 
-## Apple Silicon Check
+## Distribution
 
-On an Apple Silicon Mac:
-
-```bash
-lipo -info dist/AriaFlow.app/Contents/MacOS/AriaFlow
-file dist/AriaFlow.app/Contents/Resources/motrix-next-engine-aarch64-apple-darwin
-open dist/AriaFlow.app
-```
-
-Confirm Settings -> Engine reports a bundled sidecar and downloads work.
-
-## Distribution Check
-
-For the `v0.1.1` public developer build:
-
-- Confirm the GitHub Release ZIP and `.sha256` file are uploaded together.
-- Confirm the release notes say the archive is ad-hoc signed and not notarized.
-- Confirm `THIRD_PARTY_NOTICES.md` and the aria2-next `COPYING` file are attached to the release.
-
-For a future notarized build:
-
-- Sign with `SIGN_IDENTITY="Developer ID Application: ..."` when running `scripts/package_app.sh`.
-- Notarize with `NOTARY_PROFILE=...`.
-- Confirm Gatekeeper accepts the ZIP on a clean macOS user account.
-- Keep the `.zip.sha256` file with the uploaded ZIP.
+- Upload the ZIP and matching checksum together.
+- Preserve `THIRD_PARTY_NOTICES.md` and `third_party/aria2-next/COPYING`.
+- State whether the build is ad-hoc signed or notarized.
+- For notarization, set `SIGN_IDENTITY` and `NOTARY_PROFILE` when running `scripts/package_app.sh`.

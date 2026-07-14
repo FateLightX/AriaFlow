@@ -185,6 +185,10 @@ struct Aria2Client {
         try callSync("aria2.getVersion")
     }
 
+    func getGlobalOptionSync() throws -> [String: String] {
+        try callSync("aria2.getGlobalOption")
+    }
+
     func addUriSync(_ uris: [String], options: [String: String] = [:]) throws -> String {
         try callSync("aria2.addUri", params: [uris, options])
     }

@@ -1,96 +1,64 @@
-# AriaFlow Sidecar
+# Sidecar
 
-AriaFlow can run with a bundled aria2-compatible executable or fall back to a system `aria2c`.
+AriaFlow ships `aria2-next 2.5.1` for arm64 and x86_64. Source URLs, licenses and SHA-256 values are recorded in [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
 
-## Install A Sidecar
+## Resource Names
 
-AriaFlow v1 uses prebuilt binaries from:
+| Architecture | Resource |
+| --- | --- |
+| arm64 | `Sources/AriaFlow/Resources/motrix-next-engine-aarch64-apple-darwin` |
+| x86_64 | `Sources/AriaFlow/Resources/motrix-next-engine-x86_64-apple-darwin` |
 
-https://github.com/AnInsomniacy/aria2-next/releases
+`EngineManager` selects the current architecture's bundled resource before checking system `aria2c` and `aria2-next` paths.
 
-The bundled `aria2-next 2.4.9` sidecars are GPL-2.0 components. Their source URL, local SHA-256 values, and the GPL text are recorded in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). Preserve those files when redistributing a packaged app.
+## Replace Binaries
 
-Use the macOS assets for both CPU architectures when building the release app:
-
-- Apple Silicon: `aria2-next-<version>-macos-arm64`
-- Intel: `aria2-next-<version>-macos-x86_64`
-
-Download `aria2-next-<version>-checksums.sha256` from the same release and verify the binary before packaging.
-
-Copy a local aria2 executable into the SwiftPM resource directory:
+Download both macOS assets and the checksum file from the same upstream release:
 
 ```bash
-scripts/install_sidecar.sh /path/to/aria2c
+shasum -a 256 -c aria2-next-<version>-checksums.sha256
+scripts/install_sidecar.sh --arch arm64 aria2-next-<version>-macos-arm64
+scripts/install_sidecar.sh --arch x86_64 aria2-next-<version>-macos-x86_64
 ```
 
-Install a specific architecture from a downloaded release asset:
+Then update:
+
+- About-window engine version
+- `THIRD_PARTY_NOTICES.md` release URL, source URL and both hashes
+- `CHANGELOG.md`
+
+Do not replace binaries without the upstream checksum and GPL source record.
+
+## Launch Contract
+
+Runtime arguments are assembled in `EngineManager.startIfNeeded()`:
+
+- local-only JSON-RPC port and optional secret
+- download directory and concurrency limits
+- session input/save paths
+- `info` log level
+- bundled `aria2.conf`
+- validated `bt-peer-blocklist` path when configured
+
+Aria2 Next owns log rotation. Defaults are 10 MB per file and four files.
+
+## Peer Blocklist
+
+The file format is one IPv4, IPv6 or CIDR rule per line. Empty lines and lines beginning with `#` are ignored.
+
+AriaFlow:
+
+1. validates the file with `PeerBlocklistFile`;
+2. passes it to the bundled engine at startup;
+3. reloads or clears it through `aria2.changeGlobalOption`;
+4. keeps the previous active rules when a reload fails.
+
+Only local file paths are supported. There is no URL subscription or scheduled refresh.
+
+## Verification
 
 ```bash
-scripts/install_sidecar.sh --arch arm64 /path/to/aria2-next-<version>-macos-arm64
-scripts/install_sidecar.sh --arch x86_64 /path/to/aria2-next-<version>-macos-x86_64
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer scripts/verify_release.sh
 ```
 
-If `aria2c` is already on `PATH`, the script can be run without arguments:
-
-```bash
-scripts/install_sidecar.sh
-```
-
-The script writes the executable to:
-
-- Apple Silicon: `Sources/AriaFlow/Resources/motrix-next-engine-aarch64-apple-darwin`
-- Intel: `Sources/AriaFlow/Resources/motrix-next-engine-x86_64-apple-darwin`
-
-Then rebuild the app:
-
-```bash
-scripts/package_app.sh
-```
-
-`scripts/package_app.sh` builds a universal macOS executable by default. For a faster current-architecture-only local package, run:
-
-```bash
-UNIVERSAL=0 scripts/package_app.sh
-```
-
-## Verify
-
-Open Settings -> Engine. `引擎来源` should show `随包 sidecar`.
-
-The packaged executable will be copied to:
-
-```text
-dist/AriaFlow.app/Contents/Resources/
-```
-
-Verify the app binary and bundled sidecars:
-
-```bash
-lipo -info dist/AriaFlow.app/Contents/MacOS/AriaFlow
-file dist/AriaFlow.app/Contents/Resources/motrix-next-engine-aarch64-apple-darwin
-file dist/AriaFlow.app/Contents/Resources/motrix-next-engine-x86_64-apple-darwin
-```
-
-Run the local sidecar download smoke test:
-
-```bash
-scripts/smoke_sidecar_download.sh
-```
-
-Run the packaged app download smoke test:
-
-```bash
-scripts/smoke_app_download.sh
-```
-
-Both smoke tests start local TCP listeners. Run them from a normal macOS terminal; restricted sandboxes may block local listeners and report that explicitly.
-
-## Current Fallback
-
-If no bundled sidecar is present, AriaFlow searches these system paths:
-
-- `/opt/homebrew/bin/aria2c`
-- `/usr/local/bin/aria2c`
-- `/usr/bin/aria2c`
-- `/opt/homebrew/bin/aria2-next`
-- `/usr/local/bin/aria2-next`
+The verification script checks the Universal app, both sidecars, signing, archive checksum, peer-blocklist RPC behavior and local downloads.

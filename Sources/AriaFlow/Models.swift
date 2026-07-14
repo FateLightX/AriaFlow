@@ -258,6 +258,7 @@ struct AppSettings: Codable {
     var showMainWindowOnLaunch = true
     var keepRunningAfterMainWindowClose = true
     var hideDockIconInMenuBarMode = true
+    var btPeerBlocklistPath = ""
     var rpcPort = 6800
 
     private enum CodingKeys: String, CodingKey {
@@ -272,6 +273,7 @@ struct AppSettings: Codable {
         case showMainWindowOnLaunch
         case keepRunningAfterMainWindowClose
         case hideDockIconInMenuBarMode
+        case btPeerBlocklistPath
         case rpcPort
     }
 
@@ -290,6 +292,7 @@ struct AppSettings: Codable {
         showMainWindowOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .showMainWindowOnLaunch) ?? true
         keepRunningAfterMainWindowClose = try container.decodeIfPresent(Bool.self, forKey: .keepRunningAfterMainWindowClose) ?? true
         hideDockIconInMenuBarMode = try container.decodeIfPresent(Bool.self, forKey: .hideDockIconInMenuBarMode) ?? true
+        btPeerBlocklistPath = try container.decodeIfPresent(String.self, forKey: .btPeerBlocklistPath) ?? ""
         rpcPort = try container.decodeIfPresent(Int.self, forKey: .rpcPort) ?? 6800
     }
 
@@ -331,6 +334,7 @@ final class AppStore: ObservableObject {
     @Published var pendingFileSelectionGID: String?
     @Published private(set) var rpcSecret = ""
     @Published private(set) var rpcPortNeedsRestart = false
+    @Published private(set) var peerBlocklistMessage = "未配置"
     @Published var settings: AppSettings {
         didSet {
             LocalJSONStore.save(settings, to: LocalAppFiles.settingsURL)
@@ -362,6 +366,9 @@ final class AppStore: ObservableObject {
 
         settings = loadedSettings ?? AppSettings()
         history = Array((loadedHistory ?? []).prefix(Self.maxHistoryItems))
+        if !settings.btPeerBlocklistPath.isEmpty {
+            peerBlocklistMessage = "已保存，将在引擎连接时加载"
+        }
         let storedRPCSecret = LocalSecretStore.load()
         rpcSecret = Self.normalizedRPCSecret(storedRPCSecret)
         if rpcSecret != storedRPCSecret {
@@ -520,6 +527,7 @@ final class AppStore: ObservableObject {
             try await refreshTasksFromEngine(using: client)
             engineMessage = "aria2 \(version.version) 已连接"
             connectionState = .connected
+            await reloadPeerBlocklist()
             startPolling()
         } catch {
             engineMessage = error.localizedDescription
@@ -682,6 +690,12 @@ final class AppStore: ObservableObject {
         setRPCSecret("", restartEngine: false)
         settings = AppSettings()
         engineMessage = "设置已恢复默认值"
+        peerBlocklistMessage = "未配置"
+        if connectionState == .connected {
+            Task {
+                await clearPeerBlocklist()
+            }
+        }
     }
 
     private func scheduleAutomaticEngineRestart() {
@@ -888,6 +902,59 @@ final class AppStore: ObservableObject {
         } catch {
             engineMessage = "设置已保存，但同步到 aria2 失败：\(error.localizedDescription)"
         }
+    }
+
+    func setPeerBlocklist(path: String) async {
+        do {
+            guard let validatedPath = try PeerBlocklistFile.validatedPath(path) else { return }
+            if connectionState == .connected {
+                _ = try await makeClient().changeGlobalOption([
+                    "bt-peer-blocklist": validatedPath
+                ])
+                peerBlocklistMessage = "已加载 \(URL(fileURLWithPath: validatedPath).lastPathComponent)"
+            } else {
+                peerBlocklistMessage = "已保存，将在引擎连接时加载"
+            }
+            settings.btPeerBlocklistPath = validatedPath
+        } catch {
+            peerBlocklistMessage = error.localizedDescription
+        }
+    }
+
+    func reloadPeerBlocklist() async {
+        do {
+            guard let validatedPath = try PeerBlocklistFile.validatedPath(settings.btPeerBlocklistPath) else {
+                peerBlocklistMessage = "未配置"
+                return
+            }
+            guard connectionState == .connected else {
+                peerBlocklistMessage = "已保存，将在引擎连接时加载"
+                return
+            }
+
+            _ = try await makeClient().changeGlobalOption([
+                "bt-peer-blocklist": validatedPath
+            ])
+            peerBlocklistMessage = "已加载 \(URL(fileURLWithPath: validatedPath).lastPathComponent)"
+        } catch {
+            peerBlocklistMessage = "重新加载失败，当前规则保持不变：\(error.localizedDescription)"
+        }
+    }
+
+    func clearPeerBlocklist() async {
+        if connectionState == .connected {
+            do {
+                _ = try await makeClient().changeGlobalOption([
+                    "bt-peer-blocklist": ""
+                ])
+            } catch {
+                peerBlocklistMessage = "清除失败，当前规则仍然生效：\(error.localizedDescription)"
+                return
+            }
+        }
+
+        settings.btPeerBlocklistPath = ""
+        peerBlocklistMessage = "未配置"
     }
 
     func startSelectedFilesDownload() async {

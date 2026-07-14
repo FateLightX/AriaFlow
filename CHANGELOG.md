@@ -2,6 +2,24 @@
 
 All notable changes to AriaFlow are documented in this file.
 
+## 0.2.0 - 2026-07-15
+
+### Added
+
+- Added local BitTorrent peer blocklist selection, validation, runtime reload, and clearing.
+
+### Changed
+
+- Updated bundled `aria2-next` sidecars from 2.4.9 to 2.5.1.
+- Updated the engine log level to the 2.5.x-compatible `info` value.
+- Consolidated developer documentation around architecture, sidecar, release, and agent recovery context.
+
+### Fixed
+
+- Activated the Settings window correctly on macOS 15.
+- Prevented the main window from flashing when launching in menu-bar mode.
+- Restored native Command-drag repositioning for the menu-bar item.
+
 ## 0.1.1 - 2026-07-11
 
 ### Changed

@@ -1478,6 +1478,53 @@ struct SettingsWindowView: View {
                 .controlSize(.regular)
             }
 
+            settingsPanel(
+                title: "BT Peer Blocklist",
+                subtitle: "每行填写一个 IPv4、IPv6 或 CIDR；空行和 # 注释会被忽略。",
+                symbol: "shield.lefthalf.filled"
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("规则文件")
+                        Spacer()
+                        Button("选择...") {
+                            choosePeerBlocklist()
+                        }
+                        .controlSize(.small)
+                    }
+
+                    pathValue(
+                        store.settings.btPeerBlocklistPath.isEmpty
+                            ? "未选择"
+                            : store.settings.btPeerBlocklistPath
+                    )
+
+                    Text(store.peerBlocklistMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    HStack {
+                        Spacer()
+
+                        Button("重新加载") {
+                            Task {
+                                await store.reloadPeerBlocklist()
+                            }
+                        }
+                        .disabled(store.settings.btPeerBlocklistPath.isEmpty)
+
+                        Button("清除") {
+                            Task {
+                                await store.clearPeerBlocklist()
+                            }
+                        }
+                        .disabled(store.settings.btPeerBlocklistPath.isEmpty)
+                    }
+                    .controlSize(.small)
+                }
+            }
+
         case .about:
             settingsPanel(title: "AriaFlow", symbol: "info.circle") {
                 settingsRow("软件版本", detail: nil) {
@@ -1486,7 +1533,7 @@ struct SettingsWindowView: View {
                 }
 
                 settingsRow("Aria2 Next 版本", detail: nil) {
-                    Text("2.4.9")
+                    Text("2.5.1")
                         .foregroundStyle(.secondary)
                 }
 
@@ -1504,7 +1551,7 @@ struct SettingsWindowView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.1"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.0"
     }
 
     private var ariaFlowRepositoryURL: URL {
@@ -1603,6 +1650,20 @@ struct SettingsWindowView: View {
 
         if panel.runModal() == .OK, let url = panel.url {
             store.settings.downloadDirectory = url.path
+        }
+    }
+
+    private func choosePeerBlocklist() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.prompt = "选择"
+
+        if panel.runModal() == .OK, let url = panel.url {
+            Task {
+                await store.setPeerBlocklist(path: url.path)
+            }
         }
     }
 
