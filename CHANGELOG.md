@@ -7,6 +7,7 @@ All notable changes to AriaFlow are documented in this file.
 ### Changed
 
 - Debounce settings and history disk writes (400ms) and flush on app termination.
+- Compress README assets (`AppIcon.png` 1024→256, screenshot palette/optimized PNG).
 
 ## 0.3.2 - 2026-07-20
 
