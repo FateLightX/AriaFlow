@@ -2,17 +2,12 @@
 
 All notable changes to AriaFlow are documented in this file.
 
-## Unreleased
+## 0.3.2 - 2026-07-20
 
 ### Changed
 
 - Debounce settings and history disk writes (400ms) and flush on app termination.
 - Compress README assets (`AppIcon.png` 1024→256, screenshot palette/optimized PNG).
-
-## 0.3.2 - 2026-07-20
-
-### Changed
-
 - Split oversized `Models.swift` / `Views.swift` into focused source files (persistence, task models, settings, store, window/list/sheets/settings views).
 - Poll slower when idle; tolerate brief RPC failures before disconnecting.
 - Paginate waiting/stopped task lists (up to 2000) and show a status-bar truncation hint.
