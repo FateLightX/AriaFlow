@@ -2,66 +2,76 @@
 
 ## Start Here
 
-Before changing anything:
-
 ```bash
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 git status -sb
 git diff --stat
 ```
 
-Then read:
+Read in order:
 
-1. `docs/ARCHITECTURE.md` for module ownership and data flow.
-2. `CHANGELOG.md` for unreleased behavior.
-3. The nearest source file and every caller of the symbol being changed.
+1. This file (ownership + invariants)
+2. `docs/ARCHITECTURE.md` for modules and data flow
+3. `docs/SIDECAR.md` only when changing the engine binary or launch args
+4. `CHANGELOG.md` for recent user-visible behavior
+5. The source file and every caller of the symbol being changed
 
-Code and tests are authoritative. Do not reconstruct removed PRD, prototype or progress documents.
+Code and tests are authoritative. Do not recreate removed PRD, prototype, progress, or optimization narrative documents.
 
 ## Project Facts
 
-- SwiftPM macOS app using SwiftUI with narrow AppKit hooks.
-- Deployment target: macOS 14.
-- Release toolchain: Xcode 26 / Swift 6.2.
-- UI language: Simplified Chinese.
-- Main executable and release bundle are Universal arm64 + x86_64.
-- Download engine: bundled Aria2 Next 2.5.1 over local JSON-RPC.
-- System `aria2c` / `aria2-next` paths are fallback only.
-- The app is local-only: no accounts, cloud sync or remote aria2 management.
+- SwiftPM macOS app: SwiftUI + narrow AppKit hooks
+- Deployment: macOS 14+; Liquid Glass on macOS 26
+- Toolchain: Xcode 26 / Swift 6.2
+- UI language: Simplified Chinese
+- Universal arm64 + x86_64 executable and release bundle
+- Download engine: bundled Aria2 Next 2.5.1 over local JSON-RPC
+- System `aria2c` / `aria2-next` are fallback only
+- Local-only app: no accounts, cloud sync, or remote aria2 management
 
 ## Ownership
 
-- `AriaFlowApp.swift`, `AppDelegate.swift`, `AppPresentation.swift`: scenes, lifecycle and window activation.
-- `MainWindowViews.swift`, `TaskListViews.swift`, `*Sheet.swift`, `SettingsViews.swift`, `MenuBarViews.swift`: UI only; bind state and trigger actions.
-- `Persistence.swift`, `TaskModels.swift`, `AppSettings.swift`, `AppStore.swift`: persistence models and application orchestration.
-- `Aria2Client.swift`: JSON-RPC methods and transport.
-- `EngineManager.swift`: executable discovery, launch arguments, logs and peer-blocklist validation.
-- `DockService.swift`, `NotificationService.swift`, `LoginItemService.swift`: macOS integrations.
-- `scripts/`: packaging and executable smoke tests.
-- `Tests/`: focused parser and persistence compatibility tests.
+| Area | Files |
+| --- | --- |
+| Scenes / lifecycle | `AriaFlowApp.swift`, `AppDelegate.swift`, `AppPresentation.swift` |
+| UI only | `MainWindowViews.swift`, `TaskListViews.swift`, `*Sheet.swift`, `SettingsViews.swift`, `MenuBarViews.swift` |
+| Persistence / models | `Persistence.swift`, `TaskModels.swift`, `AppSettings.swift` |
+| Orchestration | `AppStore.swift` |
+| RPC | `Aria2Client.swift` |
+| Engine process | `EngineManager.swift` |
+| macOS integrations | `DockService.swift`, `NotificationService.swift`, `LoginItemService.swift` |
+| Packaging / smoke | `scripts/`, `SmokeDownloadRunner.swift` |
+| Tests | `Tests/` |
 
 ## Invariants
 
-- `AppStore` is `@MainActor` and owns shared UI/application state.
-- Keep JSON-RPC details out of views.
-- New `AppSettings` fields must use `decodeIfPresent` defaults.
-- Keep RPC bound to localhost; never expose secrets in logs or documentation.
-- Keep window activation and Dock policy in `AppPresentation`.
-- Do not pass Aria2 Next-only launch flags to system fallback engines.
-- Sidecar replacement requires both upstream checksums, source URL and GPL notice updates.
-- Preserve arm64 and x86_64 resource names; packaging scripts depend on them.
-- Peer blocklists are URL-sourced and cached as local files for the engine; failed reloads must keep prior active rules.
-- Preserve unrelated user changes in a dirty worktree.
+- `AppStore` is `@MainActor` and owns shared UI/application state
+- Keep JSON-RPC details out of views
+- New `AppSettings` fields must use `decodeIfPresent` defaults
+- Settings and history disk writes are debounced (400ms) and must flush on app termination
+- RPC is localhost-only; never log or document live secrets
+- Managed engine writes `rpc-secret` into `engine-runtime.conf` mode `0600` via `--conf-path`; do not put secrets on process argv
+- Default TLS check-certificate on; `rpc-allow-origin-all=false`
+- Window activation and Dock policy live only in `AppPresentation` (hide-Dock stays `.accessory` with windows open)
+- Do not pass Aria2 Next-only flags to system fallback engines
+- Peer blocklists are URL-sourced, cached locally; failed reloads keep prior rules
+- Sidecar replacement needs both upstream checksums, source URL, and GPL notice updates
+- Preserve arm64 / x86_64 resource names used by packaging scripts
+- Preserve unrelated user changes in a dirty worktree
+
+## Out of scope (unless explicitly requested)
+
+- Shared Core / monorepo with AriaLite
+- New product features (detail panel, multi-select, remote management, etc.)
+- Developer ID notarization
 
 ## Verification
 
-Use the Xcode toolchain explicitly; the active Command Line Tools may be older.
-
 ```bash
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer scripts/verify_release.sh
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+swift test --disable-sandbox          # normal code changes
+scripts/verify_release.sh             # engine, resources, downloads, persistence, packaging
 ```
-
-Run `swift test` for normal code changes. Run full release verification for engine, resources, downloads, persistence or packaging changes.
 
 Expected release outputs:
 
@@ -71,15 +81,19 @@ dist/AriaFlow-<version>.zip
 dist/AriaFlow-<version>.zip.sha256
 ```
 
-Do not commit `dist/`, `.build/`, local app data, RPC secrets, certificates or notarization credentials.
+Do not commit `dist/`, `.build/`, local app data, RPC secrets, certificates, or notarization credentials.
 
-## Documentation
+## Documentation Map
 
-- `docs/ARCHITECTURE.md`: current module and runtime design.
-- `docs/SIDECAR.md`: engine replacement and launch contract.
-- `docs/RELEASE_CHECKLIST.md`: release gate.
-- `THIRD_PARTY_NOTICES.md`: bundled binary provenance.
-- `CHANGELOG.md`: release history and pending user-visible changes.
-- `docs/OPTIMIZATION.md`: 0.3.2 optimization track notes.
+| Doc | Purpose |
+| --- | --- |
+| `README.md` | End-user install and feature summary |
+| `docs/ARCHITECTURE.md` | Modules, runtime, persistence, UI, extension rules |
+| `docs/SIDECAR.md` | Engine binaries, launch contract, peer blocklist |
+| `docs/RELEASE_CHECKLIST.md` | Automated + manual release gate |
+| `CHANGELOG.md` | Version history (user-visible) |
+| `THIRD_PARTY_NOTICES.md` | Bundled binary provenance |
+| `CONTRIBUTING.md` / `SECURITY.md` | External contribution and security reporting |
+| `AGENTS.md` | This file |
 
-Update only the smallest relevant document. Avoid narrative status logs and duplicated specifications.
+Update only the smallest relevant document. Prefer code + tests over long narrative docs.

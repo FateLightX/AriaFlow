@@ -33,14 +33,15 @@ Do not replace binaries without the upstream checksum and GPL source record.
 
 Runtime arguments are assembled in `EngineManager.startIfNeeded()`:
 
-- local-only JSON-RPC port and optional secret
+- local-only JSON-RPC port (`--rpc-listen-all=false`)
 - download directory and concurrency limits
 - session input/save paths
 - `info` log level
 - bundled `aria2.conf`
 - validated `bt-peer-blocklist` path when configured
+- `--conf-path` pointing at Application Support `engine-runtime.conf` (mode `0600`), which holds `rpc-secret` and related overrides
 
-Aria2 Next owns log rotation. Defaults are 10 MB per file and four files.
+Do not put the RPC secret on process argv. Aria2 Next owns log rotation (defaults 10 MB × 4 files).
 
 ## Peer Blocklist
 

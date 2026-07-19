@@ -49,12 +49,15 @@ Application data lives under `~/Library/Application Support/AriaFlow` unless `AR
 | File | Contents |
 | --- | --- |
 | `settings.json` | `AppSettings`, excluding the RPC secret |
-| `rpc-secret.txt` | Local RPC secret |
+| `rpc-secret.txt` | Local RPC secret (app storage) |
+| `engine-runtime.conf` | Mode `0600` conf passed via `--conf-path` (includes `rpc-secret=…`) |
 | `history.json` | Completed and removed task history |
 | `download.session` | aria2 session state |
 | `aria2-next.log` | Engine log with bounded rotation |
 
 `AppSettings` uses backward-compatible `decodeIfPresent` defaults. New persisted fields must do the same.
+
+Settings and history JSON writes are debounced (400ms) in `AppStore` and flushed on app termination.
 
 ## Engine Lifecycle
 
@@ -100,7 +103,7 @@ Torrent file bytes → Base64 → `aria2.addTorrent` with `pause=true` → file 
 Window activation and Dock visibility must remain centralized in `AppPresentation`. When `hideDockIconInMenuBarMode` is enabled, the app stays `.accessory` even if main or settings windows are visible.
 
 
-Polling uses a 2s interval while downloads are active and 5s when idle. Transient RPC errors are tolerated for a few cycles before disconnecting. Waiting/stopped lists are paginated (100 per page, max 20 pages).
+Polling uses a 2s interval while downloads are active and 5s when idle. Transient RPC errors are tolerated for a few cycles before disconnecting. Waiting/stopped lists are paginated (100 per page, max 20 pages). Notifications fire only on complete/fail.
 
 ## Scripts
 
