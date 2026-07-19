@@ -30,7 +30,7 @@ dist/AriaFlow-<version>.zip.sha256
 - Verify main-window and menu-bar launch modes.
 - Add, pause, resume and delete an HTTP task.
 - Verify torrent/magnet file selection.
-- Verify settings persistence and peer-blocklist load/reload/clear.
+- Verify settings persistence and peer-blocklist URL add/reload/clear.
 - Verify history, Dock badge and menu-bar actions.
 - On Apple Silicon, confirm the arm64 sidecar is selected.
 

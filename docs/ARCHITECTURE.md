@@ -82,7 +82,7 @@ Torrent file bytes → Base64 → `aria2.addTorrent` with `pause=true` → file 
 
 - Runtime-compatible limits use `aria2.changeGlobalOption`.
 - RPC port and secret changes restart the engine.
-- Peer blocklists are validated locally, loaded at bundled-engine startup and reloaded with `aria2.changeGlobalOption`.
+- Peer blocklists are fetched from a configured URL into a local cache, validated, loaded at bundled-engine startup and reloaded with `aria2.changeGlobalOption`.
 
 ## UI Structure
 

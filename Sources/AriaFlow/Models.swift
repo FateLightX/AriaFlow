@@ -30,6 +30,10 @@ enum LocalAppFiles {
         directory.appending(path: "rpc-secret.txt")
     }
 
+    static var peerBlocklistCacheURL: URL {
+        directory.appending(path: "bt-peer-blocklist.txt")
+    }
+
     static func ensureDirectory() {
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
@@ -258,7 +262,7 @@ struct AppSettings: Codable {
     var showMainWindowOnLaunch = true
     var keepRunningAfterMainWindowClose = true
     var hideDockIconInMenuBarMode = true
-    var btPeerBlocklistPath = ""
+    var btPeerBlocklistURL = ""
     var rpcPort = 6800
 
     private enum CodingKeys: String, CodingKey {
@@ -273,7 +277,7 @@ struct AppSettings: Codable {
         case showMainWindowOnLaunch
         case keepRunningAfterMainWindowClose
         case hideDockIconInMenuBarMode
-        case btPeerBlocklistPath
+        case btPeerBlocklistURL
         case rpcPort
     }
 
@@ -292,8 +296,26 @@ struct AppSettings: Codable {
         showMainWindowOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .showMainWindowOnLaunch) ?? true
         keepRunningAfterMainWindowClose = try container.decodeIfPresent(Bool.self, forKey: .keepRunningAfterMainWindowClose) ?? true
         hideDockIconInMenuBarMode = try container.decodeIfPresent(Bool.self, forKey: .hideDockIconInMenuBarMode) ?? true
-        btPeerBlocklistPath = try container.decodeIfPresent(String.self, forKey: .btPeerBlocklistPath) ?? ""
+        let decodedURL = try container.decodeIfPresent(String.self, forKey: .btPeerBlocklistURL) ?? ""
+        btPeerBlocklistURL = (try? PeerBlocklistFile.normalizedURLString(decodedURL)) ?? ""
         rpcPort = try container.decodeIfPresent(Int.self, forKey: .rpcPort) ?? 6800
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(autoConnectEngine, forKey: .autoConnectEngine)
+        try container.encode(downloadDirectory, forKey: .downloadDirectory)
+        try container.encode(maxConcurrentDownloads, forKey: .maxConcurrentDownloads)
+        try container.encode(splitCount, forKey: .splitCount)
+        try container.encode(maxConnectionsPerServer, forKey: .maxConnectionsPerServer)
+        try container.encode(downloadSpeedLimit, forKey: .downloadSpeedLimit)
+        try container.encode(uploadSpeedLimit, forKey: .uploadSpeedLimit)
+        try container.encode(showSpeedInMenuBar, forKey: .showSpeedInMenuBar)
+        try container.encode(showMainWindowOnLaunch, forKey: .showMainWindowOnLaunch)
+        try container.encode(keepRunningAfterMainWindowClose, forKey: .keepRunningAfterMainWindowClose)
+        try container.encode(hideDockIconInMenuBarMode, forKey: .hideDockIconInMenuBarMode)
+        try container.encode(btPeerBlocklistURL, forKey: .btPeerBlocklistURL)
+        try container.encode(rpcPort, forKey: .rpcPort)
     }
 
     private static func decodeSpeedLimit(
@@ -335,6 +357,7 @@ final class AppStore: ObservableObject {
     @Published private(set) var rpcSecret = ""
     @Published private(set) var rpcPortNeedsRestart = false
     @Published private(set) var peerBlocklistMessage = "未配置"
+    @Published private(set) var peerBlocklistBusy = false
     @Published var settings: AppSettings {
         didSet {
             LocalJSONStore.save(settings, to: LocalAppFiles.settingsURL)
@@ -366,7 +389,7 @@ final class AppStore: ObservableObject {
 
         settings = loadedSettings ?? AppSettings()
         history = Array((loadedHistory ?? []).prefix(Self.maxHistoryItems))
-        if !settings.btPeerBlocklistPath.isEmpty {
+        if !settings.btPeerBlocklistURL.isEmpty {
             peerBlocklistMessage = "已保存，将在引擎连接时加载"
         }
         let storedRPCSecret = LocalSecretStore.load()
@@ -904,38 +927,54 @@ final class AppStore: ObservableObject {
         }
     }
 
-    func setPeerBlocklist(path: String) async {
+    func setPeerBlocklist(urlString: String) async {
+        let trimmed = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            await clearPeerBlocklist()
+            return
+        }
+
+        peerBlocklistBusy = true
+        defer { peerBlocklistBusy = false }
+
         do {
-            guard let validatedPath = try PeerBlocklistFile.validatedPath(path) else { return }
+            let materialized = try await PeerBlocklistFile.materialize(fromURLString: trimmed)
+            settings.btPeerBlocklistURL = materialized.sourceURL
             if connectionState == .connected {
                 _ = try await makeClient().changeGlobalOption([
-                    "bt-peer-blocklist": validatedPath
+                    "bt-peer-blocklist": materialized.localPath
                 ])
-                peerBlocklistMessage = "已加载 \(URL(fileURLWithPath: validatedPath).lastPathComponent)"
+                peerBlocklistMessage = "已加载 \(PeerBlocklistFile.displayString(forURLString: materialized.sourceURL))"
             } else {
                 peerBlocklistMessage = "已保存，将在引擎连接时加载"
             }
-            settings.btPeerBlocklistPath = validatedPath
         } catch {
             peerBlocklistMessage = error.localizedDescription
         }
     }
 
     func reloadPeerBlocklist() async {
+        let source = settings.btPeerBlocklistURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !source.isEmpty else {
+            peerBlocklistMessage = "未配置"
+            return
+        }
+
+        peerBlocklistBusy = true
+        defer { peerBlocklistBusy = false }
+
         do {
-            guard let validatedPath = try PeerBlocklistFile.validatedPath(settings.btPeerBlocklistPath) else {
-                peerBlocklistMessage = "未配置"
-                return
-            }
+            let materialized = try await PeerBlocklistFile.materialize(fromURLString: source)
+            settings.btPeerBlocklistURL = materialized.sourceURL
             guard connectionState == .connected else {
                 peerBlocklistMessage = "已保存，将在引擎连接时加载"
                 return
             }
 
             _ = try await makeClient().changeGlobalOption([
-                "bt-peer-blocklist": validatedPath
+                "bt-peer-blocklist": materialized.localPath
             ])
-            peerBlocklistMessage = "已加载 \(URL(fileURLWithPath: validatedPath).lastPathComponent)"
+            peerBlocklistMessage = "已加载 \(PeerBlocklistFile.displayString(forURLString: materialized.sourceURL))"
         } catch {
             peerBlocklistMessage = "重新加载失败，当前规则保持不变：\(error.localizedDescription)"
         }
@@ -953,7 +992,8 @@ final class AppStore: ObservableObject {
             }
         }
 
-        settings.btPeerBlocklistPath = ""
+        settings.btPeerBlocklistURL = ""
+        try? FileManager.default.removeItem(at: LocalAppFiles.peerBlocklistCacheURL)
         peerBlocklistMessage = "未配置"
     }
 

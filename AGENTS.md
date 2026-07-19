@@ -49,7 +49,7 @@ Code and tests are authoritative. Do not reconstruct removed PRD, prototype or p
 - Do not pass Aria2 Next-only launch flags to system fallback engines.
 - Sidecar replacement requires both upstream checksums, source URL and GPL notice updates.
 - Preserve arm64 and x86_64 resource names; packaging scripts depend on them.
-- Peer blocklists are local files only; failed reloads must keep prior active rules.
+- Peer blocklists are URL-sourced and cached as local files for the engine; failed reloads must keep prior active rules.
 - Preserve unrelated user changes in a dirty worktree.
 
 ## Verification

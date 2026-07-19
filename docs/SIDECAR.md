@@ -44,16 +44,19 @@ Aria2 Next owns log rotation. Defaults are 10 MB per file and four files.
 
 ## Peer Blocklist
 
-The file format is one IPv4, IPv6 or CIDR rule per line. Empty lines and lines beginning with `#` are ignored.
+Settings store a blocklist **URL** (`http` / `https` only). AriaFlow downloads the list into Application Support (`bt-peer-blocklist.txt`), validates it, and passes the **local cache path** to the bundled engine. Local file paths and `file://` URLs are not accepted.
+
+The downloaded text format is one IPv4, IPv6 or CIDR rule per line. Empty lines and lines beginning with `#` are ignored.
 
 AriaFlow:
 
-1. validates the file with `PeerBlocklistFile`;
-2. passes it to the bundled engine at startup;
-3. reloads or clears it through `aria2.changeGlobalOption`;
-4. keeps the previous active rules when a reload fails.
+1. downloads remote lists with `PeerBlocklistFile.materialize` (atomic cache replace);
+2. validates rules before replacing the previous cache;
+3. passes the cache path at bundled-engine startup when present;
+4. reloads or clears through `aria2.changeGlobalOption`;
+5. keeps the previous active engine rules when a reload fails.
 
-Only local file paths are supported. There is no URL subscription or scheduled refresh.
+There is no scheduled refresh; use **重新加载** to re-download. Smoke tests seed the cache file and set a placeholder `https` URL.
 
 ## Verification
 

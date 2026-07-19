@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="AriaFlow"
 BUNDLE_ID="${BUNDLE_ID:-com.ariaflow.desktop}"
-APP_VERSION="${APP_VERSION:-0.2.0}"
+APP_VERSION="${APP_VERSION:-0.3.0}"
 BUILD_NUMBER="${BUILD_NUMBER:-2}"
 UNIVERSAL="${UNIVERSAL:-1}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"

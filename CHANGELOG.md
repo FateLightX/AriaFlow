@@ -2,6 +2,13 @@
 
 All notable changes to AriaFlow are documented in this file.
 
+## 0.3.0 - 2026-07-19
+
+### Changed
+
+- Settings window height now fits each tab's content (no scrollbar / fixed 360 height).
+- BT Peer Blocklist is link-only (http/https): download, validate, cache locally, then apply to the engine. Local file import is removed.
+
 ## 0.2.0 - 2026-07-15
 
 ### Added

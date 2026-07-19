@@ -1199,6 +1199,7 @@ struct SettingsWindowView: View {
     @EnvironmentObject private var store: AppStore
     @State private var selectedCategory: SettingsCategory = .general
     @State private var showLoginItemGuide = false
+    @State private var peerBlocklistURLDraft = ""
 
     private var launchInMenuBarBinding: Binding<Bool> {
         Binding {
@@ -1251,16 +1252,26 @@ struct SettingsWindowView: View {
                     settingsDetail(for: category)
                 }
                 .formStyle(.grouped)
+                .scrollDisabled(true)
                 .contentMargins(.top, 8, for: .scrollContent)
                 .contentMargins(.horizontal, 20, for: .scrollContent)
                 .contentMargins(.bottom, 8, for: .scrollContent)
+                .frame(maxWidth: .infinity, alignment: .top)
+                .fixedSize(horizontal: false, vertical: true)
                 .tabItem {
                     Label(category.title, systemImage: category.symbol)
                 }
                 .tag(category)
             }
         }
-        .frame(width: 400, height: 360)
+        .frame(width: 400)
+        .fixedSize(horizontal: false, vertical: true)
+        .onAppear {
+            peerBlocklistURLDraft = PeerBlocklistFile.displayString(forURLString: store.settings.btPeerBlocklistURL)
+        }
+        .onChange(of: store.settings.btPeerBlocklistURL) {
+            peerBlocklistURLDraft = PeerBlocklistFile.displayString(forURLString: store.settings.btPeerBlocklistURL)
+        }
         .alert("添加登录项", isPresented: $showLoginItemGuide) {
             Button("好", role: .cancel) {}
         } message: {
@@ -1480,24 +1491,48 @@ struct SettingsWindowView: View {
 
             settingsPanel(
                 title: "BT Peer Blocklist",
-                subtitle: "每行填写一个 IPv4、IPv6 或 CIDR；空行和 # 注释会被忽略。",
+                subtitle: "填写规则列表链接（http/https）。下载后按文本格式校验：每行一个 IPv4、IPv6 或 CIDR，空行和 # 注释会被忽略。",
                 symbol: "shield.lefthalf.filled"
             ) {
                 VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("规则文件")
-                        Spacer()
-                        Button("选择...") {
-                            choosePeerBlocklist()
-                        }
-                        .controlSize(.small)
-                    }
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("规则链接")
+                            .font(.body)
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
-                    pathValue(
-                        store.settings.btPeerBlocklistPath.isEmpty
-                            ? "未选择"
-                            : store.settings.btPeerBlocklistPath
-                    )
+                        HStack(spacing: 8) {
+                            TextField("", text: $peerBlocklistURLDraft)
+                                .textFieldStyle(.plain)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background {
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .fill(Color(nsColor: .textBackgroundColor))
+                                }
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .strokeBorder(Color(nsColor: .separatorColor).opacity(0.7), lineWidth: 1)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .disabled(store.peerBlocklistBusy)
+                                .onSubmit {
+                                    applyPeerBlocklistURL()
+                                }
+
+                            Button(store.settings.btPeerBlocklistURL.isEmpty ? "添加" : "更新") {
+                                applyPeerBlocklistURL()
+                            }
+                            .controlSize(.small)
+                            .fixedSize()
+                            .disabled(store.peerBlocklistBusy || peerBlocklistURLDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if !store.settings.btPeerBlocklistURL.isEmpty {
+                        pathValue(PeerBlocklistFile.displayString(forURLString: store.settings.btPeerBlocklistURL))
+                    }
 
                     Text(store.peerBlocklistMessage)
                         .font(.caption)
@@ -1512,14 +1547,15 @@ struct SettingsWindowView: View {
                                 await store.reloadPeerBlocklist()
                             }
                         }
-                        .disabled(store.settings.btPeerBlocklistPath.isEmpty)
+                        .disabled(store.peerBlocklistBusy || store.settings.btPeerBlocklistURL.isEmpty)
 
                         Button("清除") {
                             Task {
                                 await store.clearPeerBlocklist()
+                                peerBlocklistURLDraft = ""
                             }
                         }
-                        .disabled(store.settings.btPeerBlocklistPath.isEmpty)
+                        .disabled(store.peerBlocklistBusy || store.settings.btPeerBlocklistURL.isEmpty)
                     }
                     .controlSize(.small)
                 }
@@ -1551,7 +1587,7 @@ struct SettingsWindowView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.2.0"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.0"
     }
 
     private var ariaFlowRepositoryURL: URL {
@@ -1572,6 +1608,7 @@ struct SettingsWindowView: View {
             VStack(spacing: 10) {
                 content()
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         } header: {
             Label(title, systemImage: symbol)
                 .font(.headline)
@@ -1653,17 +1690,11 @@ struct SettingsWindowView: View {
         }
     }
 
-    private func choosePeerBlocklist() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.prompt = "选择"
-
-        if panel.runModal() == .OK, let url = panel.url {
-            Task {
-                await store.setPeerBlocklist(path: url.path)
-            }
+    private func applyPeerBlocklistURL() {
+        let draft = peerBlocklistURLDraft
+        Task {
+            await store.setPeerBlocklist(urlString: draft)
+            peerBlocklistURLDraft = PeerBlocklistFile.displayString(forURLString: store.settings.btPeerBlocklistURL)
         }
     }
 

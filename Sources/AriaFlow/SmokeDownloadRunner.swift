@@ -32,7 +32,12 @@ enum SmokeDownloadRunner {
         settings.autoConnectEngine = false
         settings.downloadDirectory = downloadDirectory
         settings.rpcPort = rpcPort
-        settings.btPeerBlocklistPath = ProcessInfo.processInfo.environment["ARIAFLOW_SMOKE_BLOCKLIST_PATH"] ?? ""
+        let smokeBlocklistPath = ProcessInfo.processInfo.environment["ARIAFLOW_SMOKE_BLOCKLIST_PATH"] ?? ""
+        if !smokeBlocklistPath.isEmpty {
+            let contents = try String(contentsOfFile: smokeBlocklistPath, encoding: .utf8)
+            _ = try PeerBlocklistFile.installValidatedCache(contents: contents)
+            settings.btPeerBlocklistURL = "https://ariaflow.smoke/blocklist.txt"
+        }
 
         let engineManager = EngineManager()
         try engineManager.startIfNeeded(settings: settings, rpcSecret: secret)
@@ -40,7 +45,7 @@ enum SmokeDownloadRunner {
 
         let client = Aria2Client(port: rpcPort, token: secret)
         try waitForEngine(client: client)
-        if let expectedBlocklistPath = try PeerBlocklistFile.validatedPath(settings.btPeerBlocklistPath) {
+        if let expectedBlocklistPath = try PeerBlocklistFile.resolvedLocalPath(forURLString: settings.btPeerBlocklistURL) {
             let actualBlocklistPath = try client.getGlobalOptionSync()["bt-peer-blocklist"]
             guard actualBlocklistPath == expectedBlocklistPath else {
                 throw SmokeDownloadError.blocklistNotLoaded

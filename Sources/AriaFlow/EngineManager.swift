@@ -5,26 +5,135 @@ enum PeerBlocklistFileError: LocalizedError {
     case unavailable(String)
     case unreadable(String)
     case invalidRule(line: Int, value: String)
+    case invalidURL(String)
+    case unsupportedScheme(String)
+    case downloadFailed(String)
+    case emptyContent
+    case tooLarge(Int)
 
     var errorDescription: String? {
         switch self {
         case .unavailable(let path):
-            "Peer Blocklist 文件不存在或不可读：\(path)"
+            "Peer Blocklist 缓存不可读：\(path)"
         case .unreadable(let path):
-            "无法读取 Peer Blocklist 文件：\(path)"
+            "无法读取 Peer Blocklist：\(path)"
         case .invalidRule(let line, let value):
             "Peer Blocklist 第 \(line) 行不是有效的 IP 或 CIDR：\(value)"
+        case .invalidURL(let value):
+            "Peer Blocklist 链接无效：\(value)"
+        case .unsupportedScheme(let scheme):
+            "Peer Blocklist 仅支持 http 或 https 链接，当前为：\(scheme)"
+        case .downloadFailed(let detail):
+            "Peer Blocklist 下载失败：\(detail)"
+        case .emptyContent:
+            "Peer Blocklist 内容为空"
+        case .tooLarge(let limit):
+            "Peer Blocklist 超过大小限制（\(limit) 字节）"
         }
     }
 }
 
 enum PeerBlocklistFile {
-    static func validatedPath(_ rawPath: String) throws -> String? {
-        let trimmedPath = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedPath.isEmpty else { return nil }
+    static let maxDownloadBytes = 10 * 1024 * 1024
 
-        let path = URL(fileURLWithPath: (trimmedPath as NSString).expandingTildeInPath)
-            .standardizedFileURL.path
+    static func normalizedURLString(_ raw: String) throws -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        guard let url = URL(string: trimmed), let scheme = url.scheme?.lowercased(), !scheme.isEmpty else {
+            throw PeerBlocklistFileError.invalidURL(trimmed)
+        }
+
+        guard scheme == "http" || scheme == "https" else {
+            throw PeerBlocklistFileError.unsupportedScheme(scheme)
+        }
+        guard let host = url.host, !host.isEmpty else {
+            throw PeerBlocklistFileError.invalidURL(trimmed)
+        }
+        return url.absoluteString
+    }
+
+    static func displayString(forURLString raw: String) -> String {
+        (try? normalizedURLString(raw)) ?? raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Returns the validated local cache path when a remote URL is configured and the cache is present.
+    static func resolvedLocalPath(
+        forURLString raw: String,
+        cacheURL: URL = LocalAppFiles.peerBlocklistCacheURL
+    ) throws -> String? {
+        guard try normalizedURLString(raw) != nil else { return nil }
+        return try validatedCachePath(cacheURL)
+    }
+
+    /// Downloads an http(s) list into the cache (atomically) and returns the source URL plus cache path.
+    static func materialize(
+        fromURLString raw: String,
+        cacheURL: URL = LocalAppFiles.peerBlocklistCacheURL
+    ) async throws -> (sourceURL: String, localPath: String) {
+        guard let normalized = try normalizedURLString(raw),
+              let url = URL(string: normalized) else {
+            throw PeerBlocklistFileError.invalidURL(raw)
+        }
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(from: url)
+        } catch {
+            throw PeerBlocklistFileError.downloadFailed(error.localizedDescription)
+        }
+
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw PeerBlocklistFileError.downloadFailed("HTTP \(http.statusCode)")
+        }
+        guard !data.isEmpty else {
+            throw PeerBlocklistFileError.emptyContent
+        }
+        guard data.count <= maxDownloadBytes else {
+            throw PeerBlocklistFileError.tooLarge(maxDownloadBytes)
+        }
+
+        guard let contents = String(data: data, encoding: .utf8)
+                ?? String(data: data, encoding: .isoLatin1) else {
+            throw PeerBlocklistFileError.unreadable(url.absoluteString)
+        }
+
+        let path = try installValidatedCache(contents: contents, cacheURL: cacheURL)
+        return (normalized, path)
+    }
+
+    static func installValidatedCache(
+        contents: String,
+        cacheURL: URL = LocalAppFiles.peerBlocklistCacheURL
+    ) throws -> String {
+        try validateContents(contents)
+
+        LocalAppFiles.ensureDirectory()
+        let temporaryURL = cacheURL.deletingLastPathComponent()
+            .appending(path: cacheURL.lastPathComponent + ".download")
+        if FileManager.default.fileExists(atPath: temporaryURL.path) {
+            try FileManager.default.removeItem(at: temporaryURL)
+        }
+        try contents.write(to: temporaryURL, atomically: true, encoding: .utf8)
+
+        do {
+            _ = try validatedCachePath(temporaryURL)
+            if FileManager.default.fileExists(atPath: cacheURL.path) {
+                _ = try FileManager.default.replaceItemAt(cacheURL, withItemAt: temporaryURL)
+            } else {
+                try FileManager.default.moveItem(at: temporaryURL, to: cacheURL)
+            }
+        } catch {
+            try? FileManager.default.removeItem(at: temporaryURL)
+            throw error
+        }
+
+        return try validatedCachePath(cacheURL)
+    }
+
+    static func validatedCachePath(_ cacheURL: URL) throws -> String {
+        let path = cacheURL.standardizedFileURL.path
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory),
               !isDirectory.boolValue,
@@ -36,15 +145,23 @@ enum PeerBlocklistFile {
             throw PeerBlocklistFileError.unreadable(path)
         }
 
+        try validateContents(contents)
+        return path
+    }
+
+    static func validateContents(_ contents: String) throws {
+        var sawRule = false
         for (index, rawLine) in contents.split(separator: "\n", omittingEmptySubsequences: false).enumerated() {
             let rule = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !rule.isEmpty, !rule.hasPrefix("#") else { continue }
             guard isValidRule(rule) else {
                 throw PeerBlocklistFileError.invalidRule(line: index + 1, value: rule)
             }
+            sawRule = true
         }
-
-        return path
+        if !sawRule {
+            throw PeerBlocklistFileError.emptyContent
+        }
     }
 
     private static func isValidRule(_ rule: String) -> Bool {
@@ -132,7 +249,7 @@ final class EngineManager {
         ]
 
         if Self.isBundledExecutable(executableURL),
-           let blocklistPath = try? PeerBlocklistFile.validatedPath(settings.btPeerBlocklistPath) {
+           let blocklistPath = try? PeerBlocklistFile.resolvedLocalPath(forURLString: settings.btPeerBlocklistURL) {
             arguments.append("--bt-peer-blocklist=\(blocklistPath)")
         }
 
