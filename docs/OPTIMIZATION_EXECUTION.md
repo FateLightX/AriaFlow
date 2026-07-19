@@ -55,3 +55,22 @@ scripts/verify_release.sh
 1. Monitor user reports of TLS failures on self-signed download hosts; consider a settings toggle if needed.
 2. Shared core package with AriaLite once both trees stabilize on this behavior.
 3. Notarization when distribution audience expands beyond ad-hoc installs.
+
+
+## Follow-up: Models/Views file split (2026-07-20)
+
+Completed a pure structural split (no behavior change):
+
+### Models
+- `Persistence.swift` — app support paths, JSON, RPC secret
+- `TaskModels.swift` — filters, statuses, download task types
+- `AppSettings.swift` — persisted preferences
+- `AppStore.swift` — orchestration (kept as one file: Swift `private` is file-scoped)
+
+### Views
+- `MainWindowViews.swift` — window chrome / navigation shell
+- `TaskListViews.swift` — lists, rows, status bar
+- `AddTaskSheet.swift`, `DeleteConfirmationSheet.swift` (+ `FileSelectionSheet.swift` on AriaFlow)
+- `SettingsViews.swift` — settings tabs
+
+`AppStore` remains large by design until helpers are intentionally promoted from `private` for extension-based splits.

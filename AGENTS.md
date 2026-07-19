@@ -31,8 +31,8 @@ Code and tests are authoritative. Do not reconstruct removed PRD, prototype or p
 ## Ownership
 
 - `AriaFlowApp.swift`, `AppDelegate.swift`, `AppPresentation.swift`: scenes, lifecycle and window activation.
-- `Views.swift`, `MenuBarViews.swift`: UI only; bind state and trigger actions.
-- `Models.swift`: `AppStore`, persistence and application orchestration.
+- `MainWindowViews.swift`, `TaskListViews.swift`, `*Sheet.swift`, `SettingsViews.swift`, `MenuBarViews.swift`: UI only; bind state and trigger actions.
+- `Persistence.swift`, `TaskModels.swift`, `AppSettings.swift`, `AppStore.swift`: persistence models and application orchestration.
 - `Aria2Client.swift`: JSON-RPC methods and transport.
 - `EngineManager.swift`: executable discovery, launch arguments, logs and peer-blocklist validation.
 - `DockService.swift`, `NotificationService.swift`, `LoginItemService.swift`: macOS integrations.

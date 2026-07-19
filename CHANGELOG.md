@@ -6,6 +6,7 @@ All notable changes to AriaFlow are documented in this file.
 
 ### Changed
 
+- Split oversized `Models.swift` / `Views.swift` into focused source files (persistence, task models, settings, store, window/list/sheets/settings views).
 - Poll slower when idle; tolerate brief RPC failures before disconnecting.
 - Paginate waiting/stopped task lists (up to 2000) and show a status-bar truncation hint.
 - Keep selection stable when a task disappears instead of jumping to the first row.

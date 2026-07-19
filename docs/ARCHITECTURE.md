@@ -26,9 +26,15 @@ EngineManager ─► bundled aria2-next or system aria2
 | `AriaFlowApp.swift` | Scene declarations, commands, settings and menu bar entry points |
 | `AppDelegate.swift` | Application lifecycle, file/URL opening and status-item events |
 | `AppPresentation.swift` | Activation policy and main/settings window visibility |
-| `Views.swift` | Main window, task/history views, sheets and settings |
+| `MainWindowViews.swift` | Main window chrome, sidebar, content shell |
+| `TaskListViews.swift` | Task/history lists, rows, connection empty states, status bar |
+| `AddTaskSheet.swift` / `FileSelectionSheet.swift` / `DeleteConfirmationSheet.swift` | Modal flows |
+| `SettingsViews.swift` | Settings tabs and about |
 | `MenuBarViews.swift` | Menu bar label, menu actions and startup bootstrap |
-| `Models.swift` | `AppStore`, persisted settings, task/history models and orchestration |
+| `Persistence.swift` | Application Support paths, JSON and RPC secret storage |
+| `TaskModels.swift` | Task/filter/status models and history items |
+| `AppSettings.swift` | Persisted preferences |
+| `AppStore.swift` | Application orchestration and RPC/engine state |
 | `Aria2Client.swift` | Typed JSON-RPC request and response layer |
 | `EngineManager.swift` | Engine discovery, process launch, logs and peer blocklist validation |
 | `DockService.swift` | Dock badge and aggregate progress |
