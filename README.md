@@ -58,7 +58,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Do not in
 
 ## Docs
 
-- [AGENTS.md](AGENTS.md) · [Architecture](docs/ARCHITECTURE.md) · [Sidecar](docs/SIDECAR.md) · [Release checklist](docs/RELEASE_CHECKLIST.md) · [Optimization log](docs/OPTIMIZATION_EXECUTION.md)
+- [AGENTS.md](AGENTS.md) · [Architecture](docs/ARCHITECTURE.md) · [Sidecar](docs/SIDECAR.md) · [Release checklist](docs/RELEASE_CHECKLIST.md) · [Optimization notes](docs/OPTIMIZATION.md)
 
 ## Acknowledgements
 
