@@ -4,6 +4,8 @@ All notable changes to AriaFlow are documented in this file.
 
 ## Unreleased
 
+## 0.3.4 - 2026-07-29
+
 ### Added
 
 - Added automatic software updates when network access becomes available, with
