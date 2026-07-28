@@ -99,6 +99,9 @@ Torrent file bytes → Base64 → `aria2.addTorrent` with `pause=true` → file 
 - Sheets: add task, torrent file selection and delete confirmation.
 - Settings scene: general, downloads, engine and about tabs.
 - Menu bar extra: window access, queue actions, speeds and quit.
+- SoftwareUpdater: monitors network availability, checks stable GitHub releases,
+  falls back to the jsDelivr-hosted update manifest, validates the matching
+  archive, then replaces and relaunches the app.
 
 Window activation and Dock visibility must remain centralized in `AppPresentation`. When `hideDockIconInMenuBarMode` is enabled, the app stays `.accessory` even if main or settings windows are visible.
 
@@ -110,7 +113,7 @@ Polling uses a 2s interval while downloads are active and 5s when idle. Transien
 | Script | Purpose |
 | --- | --- |
 | `install_sidecar.sh` | Install one architecture's verified engine binary |
-| `package_app.sh` | Build, bundle, sign and archive the Universal app |
+| `package_app.sh` | Build, bundle, sign and archive Universal or per-architecture apps |
 | `verify_release.sh` | Run the complete automated release gate |
 | `smoke_sidecar_download.sh` | Verify engine RPC, peer blocklist and download behavior |
 | `smoke_app_download.sh` | Verify packaged-app engine startup and download behavior |

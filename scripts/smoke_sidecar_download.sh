@@ -109,7 +109,7 @@ VERSION_RESPONSE="$(rpc "aria2.getVersion")"
 printf "%s" "$VERSION_RESPONSE" | "$PYTHON_BIN" -c '
 import json, sys
 version = json.load(sys.stdin)["result"]["version"]
-assert version == "2.5.1", version
+assert version == "2.5.2", version
 '
 
 RELOAD_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"$RELOAD_BLOCKLIST_PATH\"}")"

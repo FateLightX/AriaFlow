@@ -25,7 +25,7 @@ Code and tests are authoritative. Do not recreate removed PRD, prototype, progre
 - Toolchain: Xcode 26 / Swift 6.2
 - UI language: Simplified Chinese
 - Universal arm64 + x86_64 executable and release bundle
-- Download engine: bundled Aria2 Next 2.5.1 over local JSON-RPC
+- Download engine: bundled Aria2 Next 2.5.2 over local JSON-RPC
 - System `aria2c` / `aria2-next` are fallback only
 - Local-only app: no accounts, cloud sync, or remote aria2 management
 

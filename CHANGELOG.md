@@ -2,6 +2,22 @@
 
 All notable changes to AriaFlow are documented in this file.
 
+## Unreleased
+
+### Added
+
+- Added automatic software updates when network access becomes available, with
+  SHA256, code-signature, bundle-ID, version, and CPU-architecture validation.
+- Added updater status and a manual check action to the About page.
+- Added a fastly.jsdelivr.net update-manifest fallback when the official GitHub
+  Releases API cannot be reached.
+
+### Changed
+
+- Updated bundled `aria2-next` sidecars from 2.5.1 to 2.5.2.
+- Added separate Apple Silicon and Intel release packages while preserving the
+  Universal package for compatibility.
+
 ## 0.3.3 - 2026-07-20
 
 ### Fixed

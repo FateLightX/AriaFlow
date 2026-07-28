@@ -10,6 +10,7 @@ struct AriaFlowApp: App {
 
     @NSApplicationDelegateAdaptor(AriaFlowAppDelegate.self) private var appDelegate
     @StateObject private var store = AppStore()
+    @StateObject private var updater = SoftwareUpdater(configuration: .ariaFlow)
 
     var body: some Scene {
         Window("AriaFlow", id: "main") {
@@ -111,12 +112,14 @@ struct AriaFlowApp: App {
         } label: {
             AriaFlowMenuBarLabel(appDelegate: appDelegate)
                 .environmentObject(store)
+                .environmentObject(updater)
         }
         .menuBarExtraStyle(.menu)
 
         Settings {
             SettingsWindowView()
                 .environmentObject(store)
+                .environmentObject(updater)
                 .onAppear {
                     AppPresentation.settingsDidAppear(store: store)
                 }

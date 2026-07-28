@@ -24,6 +24,16 @@ dist/AriaFlow-<version>.zip
 dist/AriaFlow-<version>.zip.sha256
 ```
 
+Architecture-specific builds:
+
+```bash
+ARCH=arm64 scripts/package_app.sh
+ARCH=x86_64 scripts/package_app.sh
+```
+
+These produce `AriaFlow-<version>-arm64.zip` and
+`AriaFlow-<version>-x86_64.zip` with only the matching sidecar.
+
 ## Manual
 
 - Launch the packaged app on macOS 14 or 15.

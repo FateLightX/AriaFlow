@@ -31,6 +31,7 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
 
 struct SettingsWindowView: View {
     @EnvironmentObject private var store: AppStore
+    @EnvironmentObject private var updater: SoftwareUpdater
     @State private var selectedCategory: SettingsCategory = .general
     @State private var showLoginItemGuide = false
     @State private var peerBlocklistURLDraft = ""
@@ -406,8 +407,16 @@ struct SettingsWindowView: View {
                 }
 
                 settingsRow("Aria2 Next 版本", detail: nil) {
-                    Text("2.5.1")
+                    Text("2.5.2")
                         .foregroundStyle(.secondary)
+                }
+
+                settingsRow("更新软件", detail: updater.statusText) {
+                    Button(updater.isBusy ? "处理中…" : "检查更新") {
+                        updater.checkNow()
+                    }
+                    .controlSize(.small)
+                    .disabled(updater.isBusy)
                 }
 
                 settingsRow("GitHub", detail: nil) {

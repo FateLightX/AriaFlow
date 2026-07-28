@@ -6,13 +6,22 @@ APP_NAME="AriaFlow"
 BUNDLE_ID="${BUNDLE_ID:-com.ariaflow.desktop}"
 APP_VERSION="${APP_VERSION:-0.3.3}"
 BUILD_NUMBER="${BUILD_NUMBER:-5}"
-UNIVERSAL="${UNIVERSAL:-1}"
+ARCH="${ARCH:-universal}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 SWIFT_BUILD_FLAGS=(--disable-sandbox)
-APP_DIR="$ROOT_DIR/dist/$APP_NAME.app"
-ZIP_PATH="$ROOT_DIR/dist/$APP_NAME-$APP_VERSION.zip"
+case "$ARCH" in
+    universal) ARTIFACT_SUFFIX="" ;;
+    arm64|x86_64) ARTIFACT_SUFFIX="-$ARCH" ;;
+    *)
+        echo "ARCH must be universal, arm64, or x86_64" >&2
+        exit 1
+        ;;
+esac
+
+APP_DIR="$ROOT_DIR/dist/$APP_NAME$ARTIFACT_SUFFIX.app"
+ZIP_PATH="$ROOT_DIR/dist/$APP_NAME-$APP_VERSION$ARTIFACT_SUFFIX.zip"
 CHECKSUM_PATH="$ZIP_PATH.sha256"
 
 cd "$ROOT_DIR"
@@ -56,9 +65,9 @@ mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
     exit 1
 }
 
-if [[ "$UNIVERSAL" == "1" ]]; then
+if [[ "$ARCH" == "universal" ]]; then
     command -v lipo >/dev/null 2>&1 || {
-        echo "lipo is required for UNIVERSAL=1" >&2
+        echo "lipo is required for ARCH=universal" >&2
         exit 1
     }
 
@@ -70,9 +79,10 @@ if [[ "$UNIVERSAL" == "1" ]]; then
     lipo -create "$X86_BIN_DIR/$APP_NAME" "$ARM_BIN_DIR/$APP_NAME" -output "$APP_DIR/Contents/MacOS/$APP_NAME"
     RESOURCE_BUNDLE="$X86_BIN_DIR/${APP_NAME}_${APP_NAME}.bundle"
 else
-    swift_build -c release
+    TARGET_TRIPLE="$ARCH-apple-macosx14.0"
+    swift_build -c release --triple "$TARGET_TRIPLE"
 
-    BIN_DIR="$(swift_build -c release --show-bin-path)"
+    BIN_DIR="$(swift_build -c release --triple "$TARGET_TRIPLE" --show-bin-path)"
     cp "$BIN_DIR/$APP_NAME" "$APP_DIR/Contents/MacOS/$APP_NAME"
     RESOURCE_BUNDLE="$BIN_DIR/${APP_NAME}_${APP_NAME}.bundle"
 fi
@@ -93,6 +103,11 @@ if [[ -d "$APP_DIR/Contents/Resources/Resources" ]]; then
     cp -R "$APP_DIR/Contents/Resources/Resources/." "$APP_DIR/Contents/Resources/"
     rm -rf "$APP_DIR/Contents/Resources/Resources"
 fi
+
+case "$ARCH" in
+    arm64) rm -f "$APP_DIR/Contents/Resources/motrix-next-engine-x86_64-apple-darwin" ;;
+    x86_64) rm -f "$APP_DIR/Contents/Resources/motrix-next-engine-aarch64-apple-darwin" ;;
+esac
 
 mkdir -p "$APP_DIR/Contents/Resources/ThirdParty/aria2-next"
 cp "$ROOT_DIR/THIRD_PARTY_NOTICES.md" "$APP_DIR/Contents/Resources/THIRD_PARTY_NOTICES.md"

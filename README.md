@@ -18,6 +18,8 @@ macOS 原生 SwiftUI 下载客户端，内置 `aria2-next`，支持 HTTP/HTTPS�
 - 保存位置、并发、分片、连接数、限速
 - BT Peer Blocklist 链接加载（本地缓存后生效）
 - 本地 JSON-RPC，Apple Silicon / Intel 双架构 sidecar
+- 联网后自动检查、校验并安装软件更新
+- 更新检查优先使用 GitHub 官方 API，失败时尝试 fastly.jsdelivr.net
 
 **要求：** macOS 14+（macOS 26 启用 Liquid Glass）；源码构建需 Xcode 26 / Swift 6.2。
 
