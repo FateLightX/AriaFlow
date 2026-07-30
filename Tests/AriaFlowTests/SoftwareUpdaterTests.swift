@@ -5,9 +5,9 @@ import Testing
 struct SoftwareUpdaterTests {
     @Test("compares semantic release versions")
     func comparesVersions() {
-        #expect(SoftwareUpdater.isVersion("0.3.4", newerThan: "0.3.3"))
-        #expect(SoftwareUpdater.isVersion("v1.0.0", newerThan: "0.9.9"))
-        #expect(!SoftwareUpdater.isVersion("0.3.3", newerThan: "0.3.3"))
-        #expect(!SoftwareUpdater.isVersion("0.3.2", newerThan: "0.3.3"))
+        #expect(SoftwareUpdater.isVersion("1.2.0", newerThan: "1.1.9"))
+        #expect(SoftwareUpdater.isVersion("v2.0.0", newerThan: "1.9.9"))
+        #expect(!SoftwareUpdater.isVersion("1.2.0", newerThan: "1.2.0"))
+        #expect(!SoftwareUpdater.isVersion("1.1.9", newerThan: "1.2.0"))
     }
 }

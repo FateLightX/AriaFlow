@@ -39,7 +39,7 @@ EngineManager ─► bundled aria2-next or system aria2
 | `EngineManager.swift` | Engine discovery, process launch, logs and peer blocklist validation |
 | `DockService.swift` | Dock badge and aggregate progress |
 | `NotificationService.swift` | Download state notifications |
-| `LoginItemService.swift` | System Settings login-item navigation and legacy cleanup |
+| `LoginItemService.swift` | Main-app login-item registration, status and legacy cleanup |
 | `SmokeDownloadRunner.swift` | Headless packaged-app download verification |
 
 ## State and Persistence

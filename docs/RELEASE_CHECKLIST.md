@@ -32,7 +32,23 @@ ARCH=x86_64 scripts/package_app.sh
 ```
 
 These produce `AriaFlow-<version>-arm64.zip` and
-`AriaFlow-<version>-x86_64.zip` with only the matching sidecar.
+`AriaFlow-<version>-x86_64.zip` with only the matching sidecar. Both archives
+extract to `AriaFlow.app`; the architecture suffix belongs only to the ZIP name.
+
+## Version and Publish
+
+Before tagging, keep the release version aligned in:
+
+- `CHANGELOG.md` and `update.json`
+- `APP_VERSION` / `BUILD_NUMBER` in `scripts/package_app.sh`
+- `APP_VERSION` in `scripts/verify_release.sh`
+- updater and About fallbacks in `SoftwareUpdater.swift` / `SettingsViews.swift`
+- the branch-build fallback in `.github/workflows/ci.yml`
+
+Push `main`, then push `v<version>`. The tag workflow validates `update.json`,
+runs the release gate, builds Universal / arm64 / x86_64 ZIPs, and creates or
+updates the GitHub Release with checksums and notices. Use `gh run watch` and
+verify the published asset list before announcing the release.
 
 ## Manual
 

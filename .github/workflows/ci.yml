@@ -26,7 +26,7 @@ jobs:
           [[ "$(ruby -rjson -e 'print JSON.parse(File.read(ARGV[0])).fetch("version")' update.json)" == "$VERSION" ]]
       - name: Verify package and smoke tests
         env:
-          APP_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name && format('{0}', github.ref_name) || '0.3.4' }}
+          APP_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name && format('{0}', github.ref_name) || '0.3.5' }}
         run: |
           if [[ "$APP_VERSION" == v* ]]; then
             export APP_VERSION="${APP_VERSION#v}"

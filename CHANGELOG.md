@@ -4,6 +4,15 @@ All notable changes to AriaFlow are documented in this file.
 
 ## Unreleased
 
+## 0.3.5 - 2026-07-30
+
+### Changed
+
+- Replaced manual login-item setup with an in-app toggle backed by the macOS
+  Service Management API, with a System Settings link when approval is needed.
+- Architecture-specific ZIPs now extract to `AriaFlow.app` instead of adding the
+  CPU architecture to the app bundle name.
+
 ## 0.3.4 - 2026-07-29
 
 ### Added

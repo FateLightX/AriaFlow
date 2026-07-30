@@ -24,6 +24,8 @@ final class AppStore: ObservableObject {
     @Published private(set) var rpcPortNeedsRestart = false
     @Published private(set) var peerBlocklistMessage = "未配置"
     @Published private(set) var peerBlocklistBusy = false
+    @Published private(set) var loginItemStatus = LoginItemService.status
+    @Published private(set) var loginItemErrorMessage: String?
     @Published var settings: AppSettings {
         didSet {
             scheduleSettingsSave()
@@ -91,6 +93,20 @@ final class AppStore: ObservableObject {
 
     func openLoginItemSettings() {
         LoginItemService.openSystemSettings()
+    }
+
+    func refreshLoginItemStatus() {
+        loginItemStatus = LoginItemService.status
+    }
+
+    func setLaunchAtLogin(_ enabled: Bool) {
+        loginItemErrorMessage = nil
+        do {
+            try LoginItemService.setEnabled(enabled)
+        } catch {
+            loginItemErrorMessage = "设置登录项失败：\(error.localizedDescription)"
+        }
+        refreshLoginItemStatus()
     }
 
     var selectedTask: DownloadTask? {

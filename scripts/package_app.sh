@@ -4,23 +4,29 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="AriaFlow"
 BUNDLE_ID="${BUNDLE_ID:-com.ariaflow.desktop}"
-APP_VERSION="${APP_VERSION:-0.3.4}"
-BUILD_NUMBER="${BUILD_NUMBER:-6}"
+APP_VERSION="${APP_VERSION:-0.3.5}"
+BUILD_NUMBER="${BUILD_NUMBER:-7}"
 ARCH="${ARCH:-universal}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-}"
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
 SWIFT_BUILD_FLAGS=(--disable-sandbox)
 case "$ARCH" in
-    universal) ARTIFACT_SUFFIX="" ;;
-    arm64|x86_64) ARTIFACT_SUFFIX="-$ARCH" ;;
+    universal)
+        ARTIFACT_SUFFIX=""
+        APP_OUTPUT_DIR="$ROOT_DIR/dist"
+        ;;
+    arm64|x86_64)
+        ARTIFACT_SUFFIX="-$ARCH"
+        APP_OUTPUT_DIR="$ROOT_DIR/dist/$ARCH"
+        ;;
     *)
         echo "ARCH must be universal, arm64, or x86_64" >&2
         exit 1
         ;;
 esac
 
-APP_DIR="$ROOT_DIR/dist/$APP_NAME$ARTIFACT_SUFFIX.app"
+APP_DIR="$APP_OUTPUT_DIR/$APP_NAME.app"
 ZIP_PATH="$ROOT_DIR/dist/$APP_NAME-$APP_VERSION$ARTIFACT_SUFFIX.zip"
 CHECKSUM_PATH="$ZIP_PATH.sha256"
 
@@ -47,6 +53,15 @@ sign_app() {
 create_zip() {
     rm -f "$ZIP_PATH"
     ditto -c -k --keepParent "$APP_DIR" "$ZIP_PATH"
+    ZIP_ENTRIES="$(/usr/bin/unzip -Z1 "$ZIP_PATH")"
+    FIRST_ZIP_ENTRY="${ZIP_ENTRIES%%$'\n'*}"
+    case "$FIRST_ZIP_ENTRY" in
+        "$APP_NAME.app/"*) ;;
+        *)
+            echo "archive must extract to $APP_NAME.app, found: $FIRST_ZIP_ENTRY" >&2
+            exit 1
+            ;;
+    esac
     (
         cd "$(dirname "$ZIP_PATH")"
         shasum -a 256 "$(basename "$ZIP_PATH")"

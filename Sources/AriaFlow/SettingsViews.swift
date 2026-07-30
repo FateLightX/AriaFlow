@@ -33,8 +33,15 @@ struct SettingsWindowView: View {
     @EnvironmentObject private var store: AppStore
     @EnvironmentObject private var updater: SoftwareUpdater
     @State private var selectedCategory: SettingsCategory = .general
-    @State private var showLoginItemGuide = false
     @State private var peerBlocklistURLDraft = ""
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        Binding {
+            store.loginItemStatus.isRequestedEnabled
+        } set: { enabled in
+            store.setLaunchAtLogin(enabled)
+        }
+    }
 
     private var launchInMenuBarBinding: Binding<Bool> {
         Binding {
@@ -102,15 +109,14 @@ struct SettingsWindowView: View {
         .frame(width: 400)
         .fixedSize(horizontal: false, vertical: true)
         .onAppear {
+            store.refreshLoginItemStatus()
             peerBlocklistURLDraft = PeerBlocklistFile.displayString(forURLString: store.settings.btPeerBlocklistURL)
         }
         .onChange(of: store.settings.btPeerBlocklistURL) {
             peerBlocklistURLDraft = PeerBlocklistFile.displayString(forURLString: store.settings.btPeerBlocklistURL)
         }
-        .alert("添加登录项", isPresented: $showLoginItemGuide) {
-            Button("好", role: .cancel) {}
-        } message: {
-            Text("在“登录时打开”列表中点击 +，然后选择 Applications 文件夹内的 AriaFlow.app。")
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            store.refreshLoginItemStatus()
         }
     }
 
@@ -120,12 +126,23 @@ struct SettingsWindowView: View {
         case .general:
             settingsPanel(title: "启动与常驻", symbol: "gearshape") {
                 toggleRow("菜单栏显示速度", isOn: $store.settings.showSpeedInMenuBar)
-                settingsRow("登录时自动启动", detail: "在系统设置中手动添加") {
-                    Button("打开登录项与扩展") {
-                        store.openLoginItemSettings()
-                        showLoginItemGuide = true
+                toggleRow(
+                    "登录时自动启动",
+                    detail: store.loginItemStatus.detailText,
+                    isOn: launchAtLoginBinding
+                )
+                if store.loginItemStatus == .requiresApproval {
+                    settingsRow("系统批准", detail: "macOS 需要确认后才能在登录时启动") {
+                        Button("打开登录项与扩展") {
+                            store.openLoginItemSettings()
+                        }
+                        .controlSize(.small)
                     }
-                    .controlSize(.small)
+                }
+                if let loginItemErrorMessage = store.loginItemErrorMessage {
+                    Text(loginItemErrorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
                 }
 
                 toggleRow("启动时进入菜单栏", isOn: launchInMenuBarBinding)
@@ -433,7 +450,7 @@ struct SettingsWindowView: View {
     }
 
     private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.4"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.3.5"
     }
 
     private var ariaFlowRepositoryURL: URL {
