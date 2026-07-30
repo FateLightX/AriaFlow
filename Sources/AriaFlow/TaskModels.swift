@@ -10,19 +10,19 @@ enum ConnectionState: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .starting: "正在连接"
-        case .connected: "已连接"
-        case .failed: "连接失败"
-        case .stopped: "已停止"
+        case .starting: L10n.tr("正在连接")
+        case .connected: L10n.tr("已连接")
+        case .failed: L10n.tr("连接失败")
+        case .stopped: L10n.tr("已停止")
         }
     }
 
     var detail: String {
         switch self {
-        case .starting: "正在启动 aria2-next 引擎"
-        case .connected: "aria2-next RPC 已连接"
-        case .failed: "无法连接 aria2-next RPC"
-        case .stopped: "下载引擎已停止"
+        case .starting: L10n.tr("正在启动 aria2-next 引擎")
+        case .connected: L10n.tr("aria2-next RPC 已连接")
+        case .failed: L10n.tr("无法连接 aria2-next RPC")
+        case .stopped: L10n.tr("下载引擎已停止")
         }
     }
 
@@ -57,12 +57,12 @@ enum TaskFilter: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: "全部"
-        case .active: "下载中"
-        case .waiting: "等待中"
-        case .complete: "已完成"
-        case .failed: "已失败"
-        case .history: "历史"
+        case .all: L10n.tr("全部")
+        case .active: L10n.tr("下载中")
+        case .waiting: L10n.tr("等待中")
+        case .complete: L10n.tr("已完成")
+        case .failed: L10n.tr("已失败")
+        case .history: L10n.tr("历史")
         }
     }
 
@@ -87,11 +87,11 @@ enum TaskStatus: String {
 
     var title: String {
         switch self {
-        case .active: "下载中"
-        case .waiting: "等待中"
-        case .paused: "已暂停"
-        case .complete: "已完成"
-        case .failed: "已失败"
+        case .active: L10n.tr("下载中")
+        case .waiting: L10n.tr("等待中")
+        case .paused: L10n.tr("已暂停")
+        case .complete: L10n.tr("已完成")
+        case .failed: L10n.tr("已失败")
         }
     }
 
@@ -122,9 +122,9 @@ enum TaskSort: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .status: "状态"
-        case .name: "名称"
-        case .progress: "进度"
+        case .status: L10n.tr("状态")
+        case .name: L10n.tr("名称")
+        case .progress: L10n.tr("进度")
         }
     }
 }

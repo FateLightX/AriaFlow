@@ -8,7 +8,7 @@ final class AppStore: ObservableObject {
     private static let persistenceDebounce: Duration = .milliseconds(400)
 
     @Published var connectionState: ConnectionState = .stopped
-    @Published var engineMessage = "下载引擎未连接"
+    @Published var engineMessage = L10n.tr("下载引擎未连接")
     @Published var downloadSpeedText = "0 B/s"
     @Published var uploadSpeedText = "0 B/s"
     @Published var selectedFilter: TaskFilter = .all
@@ -22,7 +22,7 @@ final class AppStore: ObservableObject {
     @Published var pendingFileSelectionGID: String?
     @Published private(set) var rpcSecret = ""
     @Published private(set) var rpcPortNeedsRestart = false
-    @Published private(set) var peerBlocklistMessage = "未配置"
+    @Published private(set) var peerBlocklistMessage = L10n.tr("未配置")
     @Published private(set) var peerBlocklistBusy = false
     @Published private(set) var loginItemStatus = LoginItemService.status
     @Published private(set) var loginItemErrorMessage: String?
@@ -65,7 +65,7 @@ final class AppStore: ObservableObject {
         history = Array((loadedHistory ?? []).prefix(Self.maxHistoryItems))
         isHydratingPersistence = false
         if !settings.btPeerBlocklistURL.isEmpty {
-            peerBlocklistMessage = "已保存，将在引擎连接时加载"
+            peerBlocklistMessage = L10n.tr("已保存，将在引擎连接时加载")
         }
         let storedRPCSecret = LocalSecretStore.load()
         rpcSecret = Self.normalizedRPCSecret(storedRPCSecret)
@@ -77,7 +77,7 @@ final class AppStore: ObservableObject {
         LoginItemService.removeLegacyLaunchAgent()
         if settings.autoConnectEngine {
             connectionState = .starting
-            engineMessage = "正在连接 aria2 RPC"
+            engineMessage = L10n.tr("正在连接 aria2 RPC")
         }
         notificationService.requestAuthorization()
 
@@ -104,7 +104,7 @@ final class AppStore: ObservableObject {
         do {
             try LoginItemService.setEnabled(enabled)
         } catch {
-            loginItemErrorMessage = "设置登录项失败：\(error.localizedDescription)"
+            loginItemErrorMessage = L10n.tr("设置登录项失败：\(error.localizedDescription)")
         }
         refreshLoginItemStatus()
     }
@@ -237,7 +237,7 @@ final class AppStore: ObservableObject {
             let client = makeClient()
             let version = try await connectOrStartEngine(client: client)
             try await refreshTasksFromEngine(using: client)
-            engineMessage = "aria2 \(version.version) 已连接"
+            engineMessage = L10n.tr("aria2 \(version.version) 已连接")
             connectionState = .connected
             await reloadPeerBlocklist()
             startPolling()
@@ -252,7 +252,7 @@ final class AppStore: ObservableObject {
         stopPolling()
         engineManager.stop()
         connectionState = .stopped
-        engineMessage = "下载引擎已停止"
+        engineMessage = L10n.tr("下载引擎已停止")
     }
 
     func stopEngineSavingSession() async {
@@ -275,11 +275,11 @@ final class AppStore: ObservableObject {
         pendingEngineRestartTask = nil
         engineManager.stop()
         connectionState = .stopped
-        engineMessage = "下载引擎已停止"
+        engineMessage = L10n.tr("下载引擎已停止")
     }
 
     func restartEngineSavingSession() async {
-        engineMessage = "正在重启 aria2 引擎"
+        engineMessage = L10n.tr("正在重启 aria2 引擎")
         await stopEngineSavingSession()
         await retryEngineConnection()
         if connectionState == .connected {
@@ -297,9 +297,9 @@ final class AppStore: ObservableObject {
         guard connectionState == .connected else { return }
         do {
             _ = try await makeClient().saveSession()
-            engineMessage = "下载会话已保存"
+            engineMessage = L10n.tr("下载会话已保存")
         } catch {
-            engineMessage = "保存下载会话失败：\(error.localizedDescription)"
+            engineMessage = L10n.tr("保存下载会话失败：\(error.localizedDescription)")
         }
     }
 
@@ -315,7 +315,7 @@ final class AppStore: ObservableObject {
                     HistoryItem(
                         gid: task.gid,
                         name: task.name,
-                        result: "已清理结果",
+                        result: L10n.tr("已清理结果"),
                         finishedAt: Self.currentTimeText(),
                         location: task.savePath
                     )
@@ -399,7 +399,7 @@ final class AppStore: ObservableObject {
         guard settings.rpcPort != normalizedPort else { return }
         settings.rpcPort = normalizedPort
         rpcPortNeedsRestart = true
-        engineMessage = "RPC 端口已保存，正在重启引擎"
+        engineMessage = L10n.tr("RPC 端口已保存，正在重启引擎")
         scheduleAutomaticEngineRestart()
     }
 
@@ -408,7 +408,7 @@ final class AppStore: ObservableObject {
         guard rpcSecret != normalizedSecret else { return }
         rpcSecret = normalizedSecret
         LocalSecretStore.save(normalizedSecret)
-        engineMessage = "RPC Secret 已保存，正在重启引擎"
+        engineMessage = L10n.tr("RPC Secret 已保存，正在重启引擎")
         if restartEngine {
             scheduleAutomaticEngineRestart()
         }
@@ -417,8 +417,8 @@ final class AppStore: ObservableObject {
     func resetSettings() {
         setRPCSecret("", restartEngine: false)
         settings = AppSettings()
-        engineMessage = "设置已恢复默认值"
-        peerBlocklistMessage = "未配置"
+        engineMessage = L10n.tr("设置已恢复默认值")
+        peerBlocklistMessage = L10n.tr("未配置")
         if connectionState == .connected {
             Task {
                 await clearPeerBlocklist()
@@ -482,16 +482,16 @@ final class AppStore: ObservableObject {
 
     func taskSummary(for task: DownloadTask) -> String {
         var lines = [
-            "名称：\(task.name)",
+            L10n.tr("名称：\(task.name)"),
             "GID：\(task.gid)",
-            "状态：\(task.status.title)",
-            "协议：\(task.protocolLabel)",
-            "进度：\(Int((task.progress * 100).rounded()))%",
-            "大小：\(task.completedSize) / \(task.totalSize)",
-            "下载速度：\(task.downloadSpeed)",
-            "上传速度：\(task.uploadSpeed)",
-            "剩余时间：\(task.remainingTime)",
-            "保存位置：\(task.savePath)"
+            L10n.tr("状态：\(task.status.title)"),
+            L10n.tr("协议：\(task.protocolLabel)"),
+            L10n.tr("进度：\(Int((task.progress * 100).rounded()))%"),
+            L10n.tr("大小：\(task.completedSize) / \(task.totalSize)"),
+            L10n.tr("下载速度：\(task.downloadSpeed)"),
+            L10n.tr("上传速度：\(task.uploadSpeed)"),
+            L10n.tr("剩余时间：\(task.remainingTime)"),
+            L10n.tr("保存位置：\(task.savePath)")
         ]
 
         if let infoHash = task.infoHash {
@@ -503,14 +503,14 @@ final class AppStore: ObservableObject {
         }
 
         if let errorMessage = task.errorMessage {
-            lines.append("错误：\(errorMessage)")
+            lines.append(L10n.tr("错误：\(errorMessage)"))
         }
 
         if !task.fileNames.isEmpty {
-            lines.append("文件：")
+            lines.append(L10n.tr("文件："))
             lines.append(contentsOf: task.fileNames.prefix(20).map { "- \($0)" })
             if task.fileNames.count > 20 {
-                lines.append("- 另有 \(task.fileNames.count - 20) 个文件")
+                lines.append(L10n.tr("- 另有 \(task.fileNames.count - 20) 个文件"))
             }
         }
 
@@ -540,7 +540,7 @@ final class AppStore: ObservableObject {
 
         if result.failed > 0 {
             let path = result.failedPaths.first.map { "：\($0)" } ?? ""
-            engineMessage = "删除任务已完成，\(result.failed) 项未能移到废纸篓\(path)（\(result.lastError ?? "未知错误")）"
+            engineMessage = L10n.tr("删除任务已完成，\(result.failed) 项未能移到废纸篓\(path)（\(result.lastError ?? L10n.tr("未知错误"))）")
         }
 
         return result
@@ -557,14 +557,14 @@ final class AppStore: ObservableObject {
     }
 
     private func deleteHistoryResult(deleteFiles: Bool, trashResult: TrashResult?) -> String {
-        guard deleteFiles else { return "已移除任务" }
-        guard let trashResult, trashResult.total > 0 else { return "已移除任务，文件路径未知" }
-        if trashResult.trashed == trashResult.total { return "已移到废纸篓" }
+        guard deleteFiles else { return L10n.tr("已移除任务") }
+        guard let trashResult, trashResult.total > 0 else { return L10n.tr("已移除任务，文件路径未知") }
+        if trashResult.trashed == trashResult.total { return L10n.tr("已移到废纸篓") }
         if trashResult.trashed > 0 {
-            return "已部分移到废纸篓（成功 \(trashResult.trashed)，失败 \(trashResult.failed)，未找到 \(trashResult.missing)）"
+            return L10n.tr("已部分移到废纸篓（成功 \(trashResult.trashed)，失败 \(trashResult.failed)，未找到 \(trashResult.missing)）")
         }
-        if trashResult.failed > 0 { return "已移除任务，\(trashResult.failed) 项删除失败" }
-        return "已移除任务，\(trashResult.missing) 项文件未找到"
+        if trashResult.failed > 0 { return L10n.tr("已移除任务，\(trashResult.failed) 项删除失败") }
+        return L10n.tr("已移除任务，\(trashResult.missing) 项文件未找到")
     }
 
     func addURLTask(urlText: String, fileName: String, splitCount: Int, downloadDirectory: String? = nil) async {
@@ -628,7 +628,7 @@ final class AppStore: ObservableObject {
                 "max-overall-upload-limit": speedLimitOption(settings.uploadSpeedLimit) ?? "0"
             ])
         } catch {
-            engineMessage = "设置已保存，但同步到 aria2 失败：\(error.localizedDescription)"
+            engineMessage = L10n.tr("设置已保存，但同步到 aria2 失败：\(error.localizedDescription)")
         }
     }
 
@@ -649,9 +649,9 @@ final class AppStore: ObservableObject {
                 _ = try await makeClient().changeGlobalOption([
                     "bt-peer-blocklist": materialized.localPath
                 ])
-                peerBlocklistMessage = "已加载 \(PeerBlocklistFile.displayString(forURLString: materialized.sourceURL))"
+                peerBlocklistMessage = L10n.tr("已加载 \(PeerBlocklistFile.displayString(forURLString: materialized.sourceURL))")
             } else {
-                peerBlocklistMessage = "已保存，将在引擎连接时加载"
+                peerBlocklistMessage = L10n.tr("已保存，将在引擎连接时加载")
             }
         } catch {
             peerBlocklistMessage = error.localizedDescription
@@ -661,7 +661,7 @@ final class AppStore: ObservableObject {
     func reloadPeerBlocklist() async {
         let source = settings.btPeerBlocklistURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !source.isEmpty else {
-            peerBlocklistMessage = "未配置"
+            peerBlocklistMessage = L10n.tr("未配置")
             return
         }
 
@@ -672,16 +672,16 @@ final class AppStore: ObservableObject {
             let materialized = try await PeerBlocklistFile.materialize(fromURLString: source)
             settings.btPeerBlocklistURL = materialized.sourceURL
             guard connectionState == .connected else {
-                peerBlocklistMessage = "已保存，将在引擎连接时加载"
+                peerBlocklistMessage = L10n.tr("已保存，将在引擎连接时加载")
                 return
             }
 
             _ = try await makeClient().changeGlobalOption([
                 "bt-peer-blocklist": materialized.localPath
             ])
-            peerBlocklistMessage = "已加载 \(PeerBlocklistFile.displayString(forURLString: materialized.sourceURL))"
+            peerBlocklistMessage = L10n.tr("已加载 \(PeerBlocklistFile.displayString(forURLString: materialized.sourceURL))")
         } catch {
-            peerBlocklistMessage = "重新加载失败，当前规则保持不变：\(error.localizedDescription)"
+            peerBlocklistMessage = L10n.tr("重新加载失败，当前规则保持不变：\(error.localizedDescription)")
         }
     }
 
@@ -692,14 +692,14 @@ final class AppStore: ObservableObject {
                     "bt-peer-blocklist": ""
                 ])
             } catch {
-                peerBlocklistMessage = "清除失败，当前规则仍然生效：\(error.localizedDescription)"
+                peerBlocklistMessage = L10n.tr("清除失败，当前规则仍然生效：\(error.localizedDescription)")
                 return
             }
         }
 
         settings.btPeerBlocklistURL = ""
         try? FileManager.default.removeItem(at: LocalAppFiles.peerBlocklistCacheURL)
-        peerBlocklistMessage = "未配置"
+        peerBlocklistMessage = L10n.tr("未配置")
     }
 
     func startSelectedFilesDownload() async {
@@ -858,12 +858,12 @@ final class AppStore: ObservableObject {
             return errorMessage
         }
         if status == .complete {
-            return "下载已完成"
+            return L10n.tr("下载已完成")
         }
         if let source = sourceURLs.first, !source.isEmpty {
             return source.count > 120 ? String(source.prefix(117)) + "..." : source
         }
-        return "aria2 任务"
+        return L10n.tr("aria2 任务")
     }
 
     static func makeTaskStatus(from status: String) -> TaskStatus {
@@ -896,7 +896,7 @@ final class AppStore: ObservableObject {
     }
 
     static func remainingTime(total: Int64, completed: Int64, speed: Int64, status: TaskStatus) -> String {
-        if status == .complete { return "已完成" }
+        if status == .complete { return L10n.tr("已完成") }
         guard total > completed, speed > 0 else { return "--" }
 
         let formatter = DateComponentsFormatter()
@@ -917,7 +917,7 @@ final class AppStore: ObservableObject {
     }
 
     private func prepareFileSelection(gid: String, client: Aria2Client) async throws {
-        engineMessage = "等待 BT/magnet 文件列表"
+        engineMessage = L10n.tr("等待 BT/magnet 文件列表")
         let files = try await waitForFiles(gid: gid, client: client)
         guard !files.isEmpty else { return }
 
@@ -925,7 +925,7 @@ final class AppStore: ObservableObject {
         fileCandidates = files.map {
             FileCandidate(
                 aria2Index: $0.index,
-                name: Self.fileName(from: $0.path).isEmpty ? "文件 \($0.index)" : Self.fileName(from: $0.path),
+                name: Self.fileName(from: $0.path).isEmpty ? L10n.tr("文件 \($0.index)") : Self.fileName(from: $0.path),
                 size: Self.formatBytes(Self.int64($0.length)),
                 isSelected: $0.selected != "false"
             )
@@ -951,7 +951,7 @@ final class AppStore: ObservableObject {
                 return try await waitForEngine(client: client)
             }
 
-            engineMessage = "正在重启 aria2 引擎以应用新的 RPC 设置"
+            engineMessage = L10n.tr("正在重启 aria2 引擎以应用新的 RPC 设置")
             _ = try? await client.saveSession()
             _ = try await client.forceShutdown()
             try await waitForExternalEngineToStop(client: client)
@@ -960,7 +960,7 @@ final class AppStore: ObservableObject {
         }
 
         if let _ = try? await client.getVersion() {
-            engineMessage = "正在重启旧 aria2 引擎以应用 TLS 设置"
+            engineMessage = L10n.tr("正在重启旧 aria2 引擎以应用 TLS 设置")
             _ = try? await client.saveSession()
             _ = try await client.forceShutdown()
             try await waitForExternalEngineToStop(client: client)
@@ -975,7 +975,7 @@ final class AppStore: ObservableObject {
         activeRPCPort = settings.rpcPort
         activeRPCToken = rpcSecret
         let launchClient = makeClient()
-        engineMessage = "正在启动 aria2 引擎"
+        engineMessage = L10n.tr("正在启动 aria2 引擎")
         try engineManager.startIfNeeded(settings: settings, rpcSecret: rpcSecret)
         return try await waitForEngine(client: launchClient)
     }
@@ -1012,7 +1012,7 @@ final class AppStore: ObservableObject {
             try await Task.sleep(for: .milliseconds(250))
         }
 
-        throw EngineManagerError.rpcUnavailable("旧 aria2 引擎未释放 RPC 端口 \(settings.rpcPort)。")
+        throw EngineManagerError.rpcUnavailable(L10n.tr("旧 aria2 引擎未释放 RPC 端口 \(settings.rpcPort)。"))
     }
 
     private func waitForManagedEngineToStop() async throws {
@@ -1024,7 +1024,7 @@ final class AppStore: ObservableObject {
         }
 
         let port = activeRPCPort ?? settings.rpcPort
-        throw EngineManagerError.rpcUnavailable("旧 aria2 引擎进程未完全退出，RPC 端口 \(port) 尚未释放。")
+        throw EngineManagerError.rpcUnavailable(L10n.tr("旧 aria2 引擎进程未完全退出，RPC 端口 \(port) 尚未释放。"))
     }
 
     private func handleRPCError(_ error: Error) {
@@ -1046,9 +1046,9 @@ final class AppStore: ObservableObject {
             guard previousStatus != task.status else { continue }
 
             if task.status == .complete {
-                notificationService.send(title: "下载完成", body: task.name)
+                notificationService.send(title: L10n.tr("下载完成"), body: task.name)
             } else if task.status == .failed {
-                notificationService.send(title: "下载失败", body: task.name)
+                notificationService.send(title: L10n.tr("下载失败"), body: task.name)
             }
 
             if task.status == .complete {
@@ -1056,7 +1056,7 @@ final class AppStore: ObservableObject {
                     HistoryItem(
                         gid: task.gid,
                         name: task.name,
-                        result: "已完成",
+                        result: L10n.tr("已完成"),
                         finishedAt: Self.currentTimeText(),
                         location: task.savePath
                     )
@@ -1066,7 +1066,7 @@ final class AppStore: ObservableObject {
                     HistoryItem(
                         gid: task.gid,
                         name: task.name,
-                        result: "已失败",
+                        result: L10n.tr("已失败"),
                         finishedAt: Self.currentTimeText(),
                         location: task.errorMessage ?? task.savePath
                     )

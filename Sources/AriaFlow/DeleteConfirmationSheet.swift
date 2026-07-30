@@ -8,25 +8,25 @@ struct DeleteConfirmationSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("删除任务？")
+            Text(L10n.tr("删除任务？"))
                 .font(.title2.bold())
 
-            Text("这会从 AriaFlow 中移除选中的任务。已下载的文件默认会保留在磁盘上。")
+            Text(L10n.tr("这会从 AriaFlow 中移除选中的任务。已下载的文件默认会保留在磁盘上。"))
                 .foregroundStyle(.secondary)
 
-            Toggle("同时删除本地文件", isOn: $deleteFiles)
+            Toggle(L10n.tr("同时删除本地文件"), isOn: $deleteFiles)
 
             if deleteFiles {
                 let targets = store.selectedTask.map { store.deleteFileTargets(for: $0) } ?? []
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("将把 \(targets.count) 个文件或文件夹移到废纸篓。")
+                    Text(L10n.tr("将把 \(targets.count) 个文件或文件夹移到废纸篓。"))
                     ForEach(Array(targets.prefix(3).enumerated()), id: \.offset) { _, path in
                         Text(path)
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
                     if targets.count > 3 {
-                        Text("另有 \(targets.count - 3) 项")
+                        Text(L10n.tr("另有 \(targets.count - 3) 项"))
                     }
                 }
                 .font(.caption)
@@ -37,11 +37,11 @@ struct DeleteConfirmationSheet: View {
 
             HStack {
                 Spacer()
-                Button("取消") {
+                Button(L10n.tr("取消")) {
                     store.showDeleteConfirmation = false
                 }
 
-                Button(deleteFiles ? "删除任务和文件" : "删除任务", role: .destructive) {
+                Button(deleteFiles ? L10n.tr("删除任务和文件") : L10n.tr("删除任务"), role: .destructive) {
                     Task {
                         await store.deleteSelected(deleteFiles: deleteFiles)
                         store.showDeleteConfirmation = false

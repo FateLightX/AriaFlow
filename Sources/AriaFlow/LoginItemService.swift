@@ -14,13 +14,13 @@ enum LoginItemStatus: Equatable {
     var detailText: String {
         switch self {
         case .notRegistered:
-            "关闭"
+            L10n.tr("关闭")
         case .enabled:
-            "已添加到系统登录项"
+            L10n.tr("已添加到系统登录项")
         case .requiresApproval:
-            "需要在系统设置中允许"
+            L10n.tr("需要在系统设置中允许")
         case .unavailable:
-            "当前应用无法注册登录项"
+            L10n.tr("当前应用无法注册登录项")
         }
     }
 }

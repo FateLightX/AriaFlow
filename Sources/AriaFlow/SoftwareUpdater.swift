@@ -19,7 +19,7 @@ final class SoftwareUpdater: ObservableObject {
         )
     }
 
-    @Published private(set) var statusText = "等待检查更新"
+    @Published private(set) var statusText = L10n.tr("等待检查更新")
     @Published private(set) var isBusy = false
 
     private let configuration: Configuration
@@ -82,7 +82,7 @@ final class SoftwareUpdater: ObservableObject {
         defer { isBusy = false }
 
         do {
-            statusText = "正在检查更新…"
+            statusText = L10n.tr("正在检查更新…")
             let release = try await latestRelease()
             let latestVersion = Self.normalizedVersion(release.tagName)
             let currentVersion = Bundle.main.object(
@@ -90,12 +90,12 @@ final class SoftwareUpdater: ObservableObject {
             ) as? String ?? configuration.fallbackVersion
 
             guard Self.isVersion(latestVersion, newerThan: currentVersion) else {
-                statusText = "已是最新版本 \(currentVersion)"
+                statusText = L10n.tr("已是最新版本 \(currentVersion)")
                 return
             }
 
             let assets = try selectAssets(in: release, version: latestVersion)
-            statusText = "正在下载 \(latestVersion)…"
+            statusText = L10n.tr("正在下载 \(latestVersion)…")
             let updateDirectory = FileManager.default.temporaryDirectory
                 .appending(path: "\(configuration.appName)-update-\(UUID().uuidString)", directoryHint: .isDirectory)
             try FileManager.default.createDirectory(at: updateDirectory, withIntermediateDirectories: true)
@@ -106,7 +106,7 @@ final class SoftwareUpdater: ObservableObject {
                 try await download(assets.archive, to: archiveURL)
                 try await download(assets.checksum, to: checksumURL)
 
-                statusText = "正在验证更新…"
+                statusText = L10n.tr("正在验证更新…")
                 try await verifyChecksum(archiveURL: archiveURL, checksumURL: checksumURL, digest: assets.archive.digest)
                 let stagedApp = try await stageAndVerifyApp(
                     archiveURL: archiveURL,
@@ -114,14 +114,14 @@ final class SoftwareUpdater: ObservableObject {
                     expectedVersion: latestVersion
                 )
 
-                statusText = "正在安装并重新启动…"
+                statusText = L10n.tr("正在安装并重新启动…")
                 try launchInstaller(stagedApp: stagedApp, updateDirectory: updateDirectory)
             } catch {
                 try? FileManager.default.removeItem(at: updateDirectory)
                 throw error
             }
         } catch {
-            statusText = "更新失败：\(error.localizedDescription)"
+            statusText = L10n.tr("更新失败：\(error.localizedDescription)")
         }
     }
 
@@ -129,7 +129,7 @@ final class SoftwareUpdater: ObservableObject {
         do {
             return try await githubLatestRelease()
         } catch {
-            statusText = "GitHub 检查失败，正在尝试加速线路…"
+            statusText = L10n.tr("GitHub 检查失败，正在尝试加速线路…")
             return try await jsDelivrLatestRelease()
         }
     }
@@ -191,7 +191,7 @@ final class SoftwareUpdater: ObservableObject {
         guard let archive = archiveNames.lazy.compactMap({ name in
             release.assets.first { $0.name == name }
         }).first else {
-            throw UpdateError.missingAsset(archiveNames.joined(separator: " 或 "))
+            throw UpdateError.missingAsset(archiveNames.joined(separator: L10n.tr(" 或 ")))
         }
         guard let checksum = release.assets.first(where: { $0.name == "\(archive.name).sha256" }) else {
             throw UpdateError.missingAsset("\(archive.name).sha256")
@@ -431,19 +431,19 @@ private enum UpdateError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noStableRelease: "没有可用的稳定版本"
-        case let .missingAsset(name): "Release 缺少文件：\(name)"
-        case .invalidResponse: "服务器响应无效"
-        case .invalidManifest: "更新清单无效"
-        case .invalidChecksumFile: "SHA256 校验文件无效"
-        case .checksumMismatch: "下载文件的 SHA256 不匹配"
-        case .invalidApplication: "更新包中没有有效的 App"
-        case .bundleIdentifierMismatch: "更新包的应用标识不匹配"
-        case .versionMismatch: "更新包的版本不匹配"
-        case .architectureMismatch: "更新包不支持当前处理器"
-        case let .commandFailed(command): "验证命令失败：\(command)"
-        case .notRunningFromApplication: "当前不是从 App 包运行，无法自动安装"
-        case .installLocationNotWritable: "当前安装目录不可写，请手动更新"
+        case .noStableRelease: L10n.tr("没有可用的稳定版本")
+        case let .missingAsset(name): L10n.tr("Release 缺少文件：\(name)")
+        case .invalidResponse: L10n.tr("服务器响应无效")
+        case .invalidManifest: L10n.tr("更新清单无效")
+        case .invalidChecksumFile: L10n.tr("SHA256 校验文件无效")
+        case .checksumMismatch: L10n.tr("下载文件的 SHA256 不匹配")
+        case .invalidApplication: L10n.tr("更新包中没有有效的 App")
+        case .bundleIdentifierMismatch: L10n.tr("更新包的应用标识不匹配")
+        case .versionMismatch: L10n.tr("更新包的版本不匹配")
+        case .architectureMismatch: L10n.tr("更新包不支持当前处理器")
+        case let .commandFailed(command): L10n.tr("验证命令失败：\(command)")
+        case .notRunningFromApplication: L10n.tr("当前不是从 App 包运行，无法自动安装")
+        case .installLocationNotWritable: L10n.tr("当前安装目录不可写，请手动更新")
         }
     }
 }

@@ -8,6 +8,7 @@ ZIP_PATH="$ROOT_DIR/dist/AriaFlow-$APP_VERSION.zip"
 
 cd "$ROOT_DIR"
 
+scripts/verify_localizations.py
 scripts/package_app.sh
 
 lipo -info "$APP_DIR/Contents/MacOS/AriaFlow"
@@ -24,6 +25,10 @@ codesign --verify --deep --strict --verbose=2 "$APP_DIR"
 )
 test -f "$APP_DIR/Contents/Resources/THIRD_PARTY_NOTICES.md"
 test -f "$APP_DIR/Contents/Resources/ThirdParty/aria2-next/COPYING"
+test -f "$APP_DIR/Contents/Resources/en.lproj/Localizable.strings"
+test -f "$APP_DIR/Contents/Resources/zh-Hans.lproj/Localizable.strings"
+test -f "$APP_DIR/Contents/Resources/zh-Hant.lproj/Localizable.strings"
+[[ "$(plutil -extract CFBundleDevelopmentRegion raw "$APP_DIR/Contents/Info.plist")" == "en" ]]
 
 scripts/smoke_sidecar_download.sh
 scripts/smoke_app_download.sh

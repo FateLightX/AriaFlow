@@ -44,44 +44,44 @@ struct AriaFlowMenuBarView: View {
     @EnvironmentObject private var store: AppStore
 
     var body: some View {
-        Button("显示 AriaFlow") {
+        Button(L10n.tr("显示 AriaFlow")) {
             showMainWindow()
         }
 
-        Button("新建任务...") {
+        Button(L10n.tr("新建任务...")) {
             store.showAddTask = true
             showMainWindow()
         }
         .disabled(store.connectionState != .connected)
 
-        Button("设置...") {
+        Button(L10n.tr("设置...")) {
             AppPresentation.showSettings(using: openSettings, store: store)
         }
 
         Divider()
 
-        Button("继续全部") {
+        Button(L10n.tr("继续全部")) {
             Task {
                 await store.resumeAll()
             }
         }
         .disabled(store.connectionState != .connected || store.waitingCount == 0)
 
-        Button("暂停全部") {
+        Button(L10n.tr("暂停全部")) {
             Task {
                 await store.pauseAll()
             }
         }
         .disabled(store.connectionState != .connected || store.activeCount == 0)
 
-        Button("保存会话") {
+        Button(L10n.tr("保存会话")) {
             Task {
                 await store.saveSession()
             }
         }
         .disabled(store.connectionState != .connected)
 
-        Button("清理结果") {
+        Button(L10n.tr("清理结果")) {
             Task {
                 await store.clearStoppedResults()
             }
@@ -90,12 +90,12 @@ struct AriaFlowMenuBarView: View {
 
         Divider()
 
-        Text("下载速度 \(store.downloadSpeedText)")
-        Text("上传速度 \(store.uploadSpeedText)")
+        Text(L10n.tr("下载速度 \(store.downloadSpeedText)"))
+        Text(L10n.tr("上传速度 \(store.uploadSpeedText)"))
 
         Divider()
 
-        Button("退出 AriaFlow") {
+        Button(L10n.tr("退出 AriaFlow")) {
             NSApp.terminate(nil)
         }
     }

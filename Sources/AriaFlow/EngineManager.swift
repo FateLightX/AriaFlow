@@ -14,21 +14,21 @@ enum PeerBlocklistFileError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unavailable(let path):
-            "Peer Blocklist 缓存不可读：\(path)"
+            L10n.tr("Peer Blocklist 缓存不可读：\(path)")
         case .unreadable(let path):
-            "无法读取 Peer Blocklist：\(path)"
+            L10n.tr("无法读取 Peer Blocklist：\(path)")
         case .invalidRule(let line, let value):
-            "Peer Blocklist 第 \(line) 行不是有效的 IP 或 CIDR：\(value)"
+            L10n.tr("Peer Blocklist 第 \(line) 行不是有效的 IP 或 CIDR：\(value)")
         case .invalidURL(let value):
-            "Peer Blocklist 链接无效：\(value)"
+            L10n.tr("Peer Blocklist 链接无效：\(value)")
         case .unsupportedScheme(let scheme):
-            "Peer Blocklist 仅支持 http 或 https 链接，当前为：\(scheme)"
+            L10n.tr("Peer Blocklist 仅支持 http 或 https 链接，当前为：\(scheme)")
         case .downloadFailed(let detail):
-            "Peer Blocklist 下载失败：\(detail)"
+            L10n.tr("Peer Blocklist 下载失败：\(detail)")
         case .emptyContent:
-            "Peer Blocklist 内容为空"
+            L10n.tr("Peer Blocklist 内容为空")
         case .tooLarge(let limit):
-            "Peer Blocklist 超过大小限制（\(limit) 字节）"
+            L10n.tr("Peer Blocklist 超过大小限制（\(limit) 字节）")
         }
     }
 }
@@ -199,13 +199,13 @@ enum EngineManagerError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .executableNotFound:
-            "找不到 aria2 可执行文件。请先安装 aria2，或将 aria2c/aria2-next 放入应用资源目录。"
+            L10n.tr("找不到 aria2 可执行文件。请先安装 aria2，或将 aria2c/aria2-next 放入应用资源目录。")
         case .processExited(let logTail):
-            logTail.isEmpty ? "aria2 引擎启动后立即退出。" : "aria2 引擎启动后立即退出：\(logTail)"
+            logTail.isEmpty ? L10n.tr("aria2 引擎启动后立即退出。") : L10n.tr("aria2 引擎启动后立即退出：\(logTail)")
         case .rpcUnavailable(let logTail):
-            logTail.isEmpty ? "aria2 引擎已启动，但 RPC 暂不可用。" : "aria2 引擎已启动，但 RPC 暂不可用：\(logTail)"
+            logTail.isEmpty ? L10n.tr("aria2 引擎已启动，但 RPC 暂不可用。") : L10n.tr("aria2 引擎已启动，但 RPC 暂不可用：\(logTail)")
         case .externalRPCInUse(let port):
-            "RPC 端口 \(port) 已被外部 aria2 占用。请关闭该进程，或修改 AriaFlow 的 RPC 端口后重试。"
+            L10n.tr("RPC 端口 \(port) 已被外部 aria2 占用。请关闭该进程，或修改 AriaFlow 的 RPC 端口后重试。")
         }
     }
 }

@@ -23,7 +23,8 @@ Code and tests are authoritative. Do not recreate removed PRD, prototype, progre
 - SwiftPM macOS app: SwiftUI + narrow AppKit hooks
 - Deployment: macOS 14+; Liquid Glass on macOS 26
 - Toolchain: Xcode 26 / Swift 6.2
-- UI language: Simplified Chinese
+- UI languages: Simplified Chinese and English; every `zh-*` system language
+  uses Chinese, all other languages fall back to English
 - Universal arm64 + x86_64 executable and release bundle
 - Download engine: bundled Aria2 Next 2.5.2 over local JSON-RPC
 - System `aria2c` / `aria2-next` are fallback only

@@ -11,24 +11,24 @@ struct FileSelectionSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("选择要下载的文件")
+            Text(L10n.tr("选择要下载的文件"))
                 .font(.title2.bold())
 
             if store.fileCandidates.isEmpty {
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text("正在读取文件列表")
+                    Text(L10n.tr("正在读取文件列表"))
                         .font(.headline)
-                    Text("Torrent 或 magnet 元数据解析完成后，可以选择要下载的文件。")
+                    Text(L10n.tr("Torrent 或 magnet 元数据解析完成后，可以选择要下载的文件。"))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity, minHeight: 250)
             } else {
-                Toggle("全选", isOn: allSelectedBinding)
+                Toggle(L10n.tr("全选"), isOn: allSelectedBinding)
                     .font(.headline)
 
-                Button("反选") {
+                Button(L10n.tr("反选")) {
                     for index in store.fileCandidates.indices {
                         store.fileCandidates[index].isSelected.toggle()
                     }
@@ -47,7 +47,7 @@ struct FileSelectionSheet: View {
                 }
                 .frame(minHeight: 210)
 
-                Text("已选择 \(selectedCount) 个文件")
+                Text(L10n.tr("已选择 \(selectedCount) 个文件"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -56,13 +56,13 @@ struct FileSelectionSheet: View {
 
             HStack {
                 Spacer()
-                Button("取消任务") {
+                Button(L10n.tr("取消任务")) {
                     Task {
                         await store.cancelFileSelection()
                     }
                 }
 
-                Button("开始下载") {
+                Button(L10n.tr("开始下载")) {
                     Task {
                         await store.startSelectedFilesDownload()
                     }

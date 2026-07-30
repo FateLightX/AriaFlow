@@ -14,6 +14,8 @@
 
 macOS 原生 SwiftUI 下载客户端，内置 `aria2-next`，支持 HTTP/HTTPS、磁力链接、ED2K、Torrent。
 
+界面自动跟随系统语言：中文系统使用简体中文，其他语言使用英文。
+
 - 下载队列、历史、筛选、菜单栏速度、Dock 进度
 - 保存位置、并发、分片、连接数、限速
 - BT Peer Blocklist 链接加载（本地缓存后生效）
@@ -39,6 +41,8 @@ scripts/verify_release.sh
 ## English
 
 Native SwiftUI download client for macOS with bundled `aria2-next` for HTTP/HTTPS, magnet, ED2K, and torrent.
+
+The interface follows the system language: Chinese locales use Simplified Chinese, and every other locale uses English.
 
 - Queue, history, filters, menu bar speed, Dock progress
 - Save path, concurrency, splits, connections, speed limits

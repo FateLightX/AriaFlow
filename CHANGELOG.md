@@ -4,6 +4,11 @@ All notable changes to AriaFlow are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added automatic Simplified Chinese and English UI localization. Chinese
+  system languages use Chinese; all other languages fall back to English.
+
 ## 0.3.5 - 2026-07-30
 
 ### Changed

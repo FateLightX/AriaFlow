@@ -27,21 +27,21 @@ struct AriaFlowApp: App {
         .defaultSize(width: 720, height: 420)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("新建任务...") {
+                Button(L10n.tr("新建任务...")) {
                     store.showAddTask = true
                 }
                 .disabled(store.connectionState != .connected)
                 .keyboardShortcut("n")
 
-                Button("打开 Torrent...") {
+                Button(L10n.tr("打开 Torrent...")) {
                     chooseTorrentFile(store: store)
                 }
                 .disabled(store.connectionState != .connected)
                 .keyboardShortcut("o")
             }
 
-            CommandMenu("任务") {
-                Button("刷新任务") {
+            CommandMenu(L10n.tr("任务")) {
+                Button(L10n.tr("刷新任务")) {
                     Task {
                         await store.refreshTasksFromEngine()
                     }
@@ -51,14 +51,14 @@ struct AriaFlowApp: App {
 
                 Divider()
 
-                Button("继续") {
+                Button(L10n.tr("继续")) {
                     Task {
                         await store.resumeSelected()
                     }
                 }
                 .disabled(store.connectionState != .connected || !store.canResumeSelected)
 
-                Button("暂停") {
+                Button(L10n.tr("暂停")) {
                     Task {
                         await store.pauseSelected()
                     }
@@ -67,14 +67,14 @@ struct AriaFlowApp: App {
 
                 Divider()
 
-                Button("继续全部") {
+                Button(L10n.tr("继续全部")) {
                     Task {
                         await store.resumeAll()
                     }
                 }
                 .disabled(store.connectionState != .connected || store.waitingCount == 0)
 
-                Button("暂停全部") {
+                Button(L10n.tr("暂停全部")) {
                     Task {
                         await store.pauseAll()
                     }
@@ -83,14 +83,14 @@ struct AriaFlowApp: App {
 
                 Divider()
 
-                Button("保存会话") {
+                Button(L10n.tr("保存会话")) {
                     Task {
                         await store.saveSession()
                     }
                 }
                 .disabled(store.connectionState != .connected)
 
-                Button("清理完成和失败结果") {
+                Button(L10n.tr("清理完成和失败结果")) {
                     Task {
                         await store.clearStoppedResults()
                     }
@@ -99,7 +99,7 @@ struct AriaFlowApp: App {
 
                 Divider()
 
-                Button("删除...") {
+                Button(L10n.tr("删除...")) {
                     store.showDeleteConfirmation = true
                 }
                 .disabled(store.connectionState != .connected || store.selectedTask == nil)

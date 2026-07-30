@@ -154,7 +154,13 @@ cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
     <key>CFBundleDevelopmentRegion</key>
-    <string>zh_CN</string>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>zh-Hans</string>
+        <string>zh-Hant</string>
+    </array>
     <key>CFBundleExecutable</key>
     <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>

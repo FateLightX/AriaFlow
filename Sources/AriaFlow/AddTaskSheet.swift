@@ -61,18 +61,18 @@ struct AddTaskSheet: View {
     private var header: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("新建任务")
+                Text(L10n.tr("新建任务"))
                     .font(.title3.weight(.semibold))
 
-                Text(tab == "url" ? "添加链接、磁力或 ED2K 下载" : "导入 torrent 并选择文件")
+                Text(tab == "url" ? L10n.tr("添加链接、磁力或 ED2K 下载") : L10n.tr("导入 torrent 并选择文件"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             Spacer()
 
-            Picker("任务类型", selection: $tab) {
-                Text("链接").tag("url")
+            Picker(L10n.tr("任务类型"), selection: $tab) {
+                Text(L10n.tr("链接")).tag("url")
                 Text("Torrent").tag("torrent")
             }
             .labelsHidden()
@@ -95,7 +95,7 @@ struct AddTaskSheet: View {
             glassPanel {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .center) {
-                        Label("下载链接", systemImage: "link")
+                        Label(L10n.tr("下载链接"), systemImage: "link")
                             .font(.headline)
 
                         Spacer()
@@ -103,7 +103,7 @@ struct AddTaskSheet: View {
                         Button {
                             pasteURLText()
                         } label: {
-                            Label("粘贴", systemImage: "doc.on.clipboard")
+                            Label(L10n.tr("粘贴"), systemImage: "doc.on.clipboard")
                         }
                         .ariaFlowGlassButtonStyle()
                         .controlSize(.small)
@@ -112,7 +112,7 @@ struct AddTaskSheet: View {
                     urlEditor
 
                     if hasInvalidURLInput {
-                        Label("仅支持 http、https、ftp、magnet 和 ed2k 链接。", systemImage: "exclamationmark.triangle.fill")
+                        Label(L10n.tr("仅支持 http、https、ftp、magnet 和 ed2k 链接。"), systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .foregroundStyle(.red)
                     }
@@ -139,16 +139,16 @@ struct AddTaskSheet: View {
                         .frame(width: 44)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Torrent 文件")
+                        Text(L10n.tr("Torrent 文件"))
                             .font(.headline)
-                        Text("拖入 .torrent 文件，或从 Finder 选择")
+                        Text(L10n.tr("拖入 .torrent 文件，或从 Finder 选择"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
 
                     Spacer()
 
-                    Button("选择...") {
+                    Button(L10n.tr("选择...")) {
                         chooseTorrentFile()
                     }
                     .ariaFlowGlassButtonStyle()
@@ -218,20 +218,20 @@ struct AddTaskSheet: View {
 
     private var footer: some View {
         HStack(spacing: 12) {
-            Text(tab == "url" ? "\(parsedURLs.count) 个有效链接" : "选择 torrent 后会读取文件列表")
+            Text(tab == "url" ? L10n.tr("\(parsedURLs.count) 个有效链接") : L10n.tr("选择 torrent 后会读取文件列表"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             Spacer()
 
-            Button("取消") {
+            Button(L10n.tr("取消")) {
                 store.showAddTask = false
             }
             .ariaFlowGlassButtonStyle()
             .keyboardShortcut(.cancelAction)
 
             if tab == "url" {
-                Button("开始下载") {
+                Button(L10n.tr("开始下载")) {
                     Task {
                         await store.addURLTask(urlText: parsedURLs.joined(separator: "\n"), fileName: fileName, splitCount: splitCount, downloadDirectory: downloadDirectory)
                     }
@@ -240,7 +240,7 @@ struct AddTaskSheet: View {
                 .keyboardShortcut(.defaultAction)
                 .disabled(!hasURLInput || hasInvalidURLInput)
             } else {
-                Button("选择 Torrent...") {
+                Button(L10n.tr("选择 Torrent...")) {
                     chooseTorrentFile()
                 }
                 .ariaFlowGlassButtonStyle(prominent: true)
@@ -250,7 +250,7 @@ struct AddTaskSheet: View {
     }
 
     private var directoryRow: some View {
-        formRow("保存到") {
+        formRow(L10n.tr("保存到")) {
             HStack(spacing: 8) {
                 Text(downloadDirectory)
                     .foregroundStyle(.secondary)
@@ -262,7 +262,7 @@ struct AddTaskSheet: View {
                     .background(.thinMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 
-                Button("选择...") {
+                Button(L10n.tr("选择...")) {
                     chooseDownloadDirectory()
                 }
                 .ariaFlowGlassButtonStyle()
@@ -272,21 +272,21 @@ struct AddTaskSheet: View {
     }
 
     private var fileNameRow: some View {
-        formRow("文件名") {
-            TextField("自动识别", text: $fileName)
+        formRow(L10n.tr("文件名")) {
+            TextField(L10n.tr("自动识别"), text: $fileName)
                 .textFieldStyle(.roundedBorder)
         }
     }
 
     private var splitCountRow: some View {
-        formRow("分片数") {
+        formRow(L10n.tr("分片数")) {
             HStack(spacing: 8) {
                 Text("\(splitCount)")
                     .font(.callout.monospacedDigit())
                     .foregroundStyle(.secondary)
                     .frame(width: 34, alignment: .leading)
 
-                Stepper("分片数", value: $splitCount, in: 1...64)
+                Stepper(L10n.tr("分片数"), value: $splitCount, in: 1...64)
                     .labelsHidden()
                     .controlSize(.small)
 
@@ -312,7 +312,7 @@ struct AddTaskSheet: View {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
         panel.canCreateDirectories = true
-        panel.prompt = "选择"
+        panel.prompt = L10n.tr("选择")
 
         if panel.runModal() == .OK, let url = panel.url {
             downloadDirectory = url.path

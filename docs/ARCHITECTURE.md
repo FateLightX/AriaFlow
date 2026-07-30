@@ -40,6 +40,7 @@ EngineManager ─► bundled aria2-next or system aria2
 | `DockService.swift` | Dock badge and aggregate progress |
 | `NotificationService.swift` | Download state notifications |
 | `LoginItemService.swift` | Main-app login-item registration, status and legacy cleanup |
+| `Localization.swift` / `Resources/*.lproj` | System-language selection, interpolation-safe lookup and English resources |
 | `SmokeDownloadRunner.swift` | Headless packaged-app download verification |
 
 ## State and Persistence
@@ -94,6 +95,11 @@ Torrent file bytes → Base64 → `aria2.addTorrent` with `pause=true` → file 
 - Peer blocklists are fetched from a configured URL into a local cache, validated, loaded at bundled-engine startup and reloaded with `aria2.changeGlobalOption`.
 
 ## UI Structure
+
+`L10n` selects Chinese for any preferred language beginning with `zh`; all
+other languages use the English table. Chinese source strings are the stable
+translation keys, including interpolation placeholders. `verify_localizations.py`
+rejects missing translations and placeholder mismatches.
 
 - Main scene: sidebar filters, task/history content and status bar.
 - Sheets: add task, torrent file selection and delete confirmation.

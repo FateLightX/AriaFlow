@@ -54,13 +54,13 @@ struct EmptyTaskView: View {
                 .font(.system(size: 54, weight: .semibold))
                 .foregroundStyle(.secondary)
 
-            Text("没有下载任务")
+            Text(L10n.tr("没有下载任务"))
                 .font(.title2.bold())
 
-            Text("添加链接或打开 torrent 文件")
+            Text(L10n.tr("添加链接或打开 torrent 文件"))
                 .foregroundStyle(.secondary)
 
-            Button("添加任务") {
+            Button(L10n.tr("添加任务")) {
                 store.showAddTask = true
             }
             .buttonStyle(.borderedProminent)
@@ -76,10 +76,10 @@ struct TaskListView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Text("\(store.filteredTasks.count) 个任务")
+                Text(L10n.tr("\(store.filteredTasks.count) 个任务"))
                     .font(.headline)
 
-                Picker("排序", selection: $store.taskSort) {
+                Picker(L10n.tr("排序"), selection: $store.taskSort) {
                     ForEach(TaskSort.allCases) { sort in
                         Text(sort.title).tag(sort)
                     }
@@ -89,7 +89,7 @@ struct TaskListView: View {
 
                 Spacer()
 
-                Button("清理结果") {
+                Button(L10n.tr("清理结果")) {
                     Task {
                         await store.clearStoppedResults()
                     }
@@ -104,9 +104,9 @@ struct TaskListView: View {
             Group {
                 if store.filteredTasks.isEmpty {
                     ContentUnavailableView(
-                        "没有匹配任务",
+                        L10n.tr("没有匹配任务"),
                         systemImage: "magnifyingglass",
-                        description: Text("调整搜索关键词或切换筛选项")
+                        description: Text(L10n.tr("调整搜索关键词或切换筛选项"))
                     )
                 } else {
                     List {
@@ -117,13 +117,13 @@ struct TaskListView: View {
                                     store.selectedTaskID = task.id
                                 }
                                 .contextMenu {
-                                    Button("继续") {
+                                    Button(L10n.tr("继续")) {
                                         store.selectedTaskID = task.id
                                         Task { await store.resumeSelected() }
                                     }
                                     .disabled(!task.status.canResume)
 
-                                    Button("暂停") {
+                                    Button(L10n.tr("暂停")) {
                                         store.selectedTaskID = task.id
                                         Task { await store.pauseSelected() }
                                     }
@@ -131,28 +131,28 @@ struct TaskListView: View {
 
                                     Divider()
 
-                                    Button("打开文件夹") {
+                                    Button(L10n.tr("打开文件夹")) {
                                         openLocation(for: task)
                                     }
 
-                                    Button("复制链接") {
+                                    Button(L10n.tr("复制链接")) {
                                         if let sourceLink = task.sourceLink {
                                             copyToPasteboard(sourceLink)
                                         }
                                     }
                                     .disabled(task.sourceLink == nil)
 
-                                    Button("复制 GID") {
+                                    Button(L10n.tr("复制 GID")) {
                                         copyToPasteboard(task.gid)
                                     }
 
-                                    Button("复制任务信息") {
+                                    Button(L10n.tr("复制任务信息")) {
                                         copyToPasteboard(store.taskSummary(for: task))
                                     }
 
                                     Divider()
 
-                                    Button("删除...", role: .destructive) {
+                                    Button(L10n.tr("删除..."), role: .destructive) {
                                         store.selectedTaskID = task.id
                                         store.showDeleteConfirmation = true
                                     }
@@ -169,7 +169,7 @@ struct TaskListView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .searchable(text: $store.taskSearchText, placement: .toolbar, prompt: "搜索任务、路径或 GID")
+        .searchable(text: $store.taskSearchText, placement: .toolbar, prompt: L10n.tr("搜索任务、路径或 GID"))
         .onAppear {
             if store.selectedTaskID == nil {
                 store.selectedTaskID = store.filteredTasks.first?.id
@@ -306,7 +306,7 @@ struct TaskRowActions: View {
             }
             .buttonStyle(.borderless)
             .disabled(!task.status.canPause && !task.status.canResume)
-            .help(task.status.canPause ? "暂停任务" : "继续任务")
+            .help(task.status.canPause ? L10n.tr("暂停任务") : L10n.tr("继续任务"))
 
             Button {
                 revealInFinder()
@@ -315,7 +315,7 @@ struct TaskRowActions: View {
                     .frame(width: 24, height: 22)
             }
             .buttonStyle(.borderless)
-            .help("在 Finder 中显示")
+            .help(L10n.tr("在 Finder 中显示"))
 
             Button {
                 if let sourceLink = task.sourceLink {
@@ -328,7 +328,7 @@ struct TaskRowActions: View {
             }
             .buttonStyle(.borderless)
             .disabled(task.sourceLink == nil)
-            .help("复制链接")
+            .help(L10n.tr("复制链接"))
 
             Button(role: .destructive) {
                 store.selectedTaskID = task.id
@@ -338,7 +338,7 @@ struct TaskRowActions: View {
                     .frame(width: 24, height: 22)
             }
             .buttonStyle(.borderless)
-            .help("删除任务")
+            .help(L10n.tr("删除任务"))
         }
         .controlSize(.small)
     }
@@ -376,12 +376,12 @@ struct HistoryListView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Text("\(store.filteredHistory.count) 条历史")
+                Text(L10n.tr("\(store.filteredHistory.count) 条历史"))
                     .font(.headline)
 
                 Spacer()
 
-                Button("清空历史", role: .destructive) {
+                Button(L10n.tr("清空历史"), role: .destructive) {
                     store.clearHistory()
                 }
                 .disabled(store.history.isEmpty)
@@ -394,9 +394,9 @@ struct HistoryListView: View {
             Group {
                 if store.filteredHistory.isEmpty {
                     ContentUnavailableView(
-                        store.historySearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "没有历史记录" : "没有匹配历史",
+                        store.historySearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? L10n.tr("没有历史记录") : L10n.tr("没有匹配历史"),
                         systemImage: "clock.arrow.circlepath",
-                        description: Text(store.historySearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "删除或完成的任务会显示在这里" : "调整搜索关键词")
+                        description: Text(store.historySearchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? L10n.tr("删除或完成的任务会显示在这里") : L10n.tr("调整搜索关键词"))
                     )
                 } else {
                     List(store.filteredHistory) { item in
@@ -407,7 +407,7 @@ struct HistoryListView: View {
                                 Spacer()
                                 Text(item.result)
                                     .font(.caption.weight(.medium))
-                                    .foregroundStyle(item.result.contains("失败") ? .red : .green)
+                                    .foregroundStyle(item.result.contains(L10n.tr("失败")) ? .red : .green)
                                 Text(item.finishedAt)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
@@ -422,14 +422,14 @@ struct HistoryListView: View {
 
                                 Spacer()
 
-                                Button("复制位置") {
+                                Button(L10n.tr("复制位置")) {
                                     copyToPasteboard(item.location)
                                 }
                                 .buttonStyle(.borderless)
                                 .font(.caption)
 
                                 if canOpenLocation(item.location) {
-                                    Button("打开位置") {
+                                    Button(L10n.tr("打开位置")) {
                                         openHistoryLocation(item.location)
                                     }
                                     .buttonStyle(.borderless)
@@ -445,7 +445,7 @@ struct HistoryListView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .searchable(text: $store.historySearchText, placement: .toolbar, prompt: "搜索历史")
+        .searchable(text: $store.historySearchText, placement: .toolbar, prompt: L10n.tr("搜索历史"))
     }
 
     private func canOpenLocation(_ location: String) -> Bool {
@@ -492,17 +492,17 @@ struct StatusBarView: View {
             Text("↓ \(store.downloadSpeedText)")
             Text("↑ \(store.uploadSpeedText)")
             if store.taskListTruncated {
-                Text("列表过长已截断")
+                Text(L10n.tr("列表过长已截断"))
                     .foregroundStyle(.orange)
             }
 
             Divider()
                 .frame(height: 16)
 
-            Text("\(store.activeCount) 个下载中")
-            Text("\(store.waitingCount) 个等待中")
-            Text("\(store.completeCount) 个已完成")
-            Text("\(store.failedCount) 个已失败")
+            Text(L10n.tr("\(store.activeCount) 个下载中"))
+            Text(L10n.tr("\(store.waitingCount) 个等待中"))
+            Text(L10n.tr("\(store.completeCount) 个已完成"))
+            Text(L10n.tr("\(store.failedCount) 个已失败"))
 
             Spacer()
         }
