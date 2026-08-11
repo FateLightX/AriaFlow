@@ -424,7 +424,7 @@ struct SettingsWindowView: View {
                 }
 
                 settingsRow(L10n.tr("Aria2 Next 版本"), detail: nil) {
-                    Text("2.5.2")
+                    Text("2.5.5")
                         .foregroundStyle(.secondary)
                 }
 

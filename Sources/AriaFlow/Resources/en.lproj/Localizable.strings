@@ -181,6 +181,7 @@
 "正在连接 aria2 RPC" = "Connecting to aria2 RPC";
 "正在重启 aria2 引擎" = "Restarting the aria2 engine";
 "正在重启 aria2 引擎以应用新的 RPC 设置" = "Restarting the aria2 engine to apply the new RPC settings";
+"aria2 RPC 无响应，正在重启引擎" = "aria2 RPC is unresponsive. Restarting the engine";
 "正在重启旧 aria2 引擎以应用 TLS 设置" = "Restarting the previous aria2 engine to apply TLS settings";
 "正在验证更新…" = "Verifying update…";
 "没有下载任务" = "No Download Tasks";

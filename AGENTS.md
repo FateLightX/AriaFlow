@@ -26,7 +26,7 @@ Code and tests are authoritative. Do not recreate removed PRD, prototype, progre
 - UI languages: Simplified Chinese and English; every `zh-*` system language
   uses Chinese, all other languages fall back to English
 - Universal arm64 + x86_64 executable and release bundle
-- Download engine: bundled Aria2 Next 2.5.2 over local JSON-RPC
+- Download engine: bundled Aria2 Next 2.5.5 over local JSON-RPC
 - System `aria2c` / `aria2-next` are fallback only
 - Local-only app: no accounts, cloud sync, or remote aria2 management
 
@@ -89,6 +89,7 @@ Do not commit `dist/`, `.build/`, local app data, RPC secrets, certificates, or 
 | Doc | Purpose |
 | --- | --- |
 | `README.md` | End-user install and feature summary |
+| `docs/AI_DEVELOPMENT.md` | Shortest AI continuation guide and handoff entrypoints |
 | `docs/ARCHITECTURE.md` | Modules, runtime, persistence, UI, extension rules |
 | `docs/SIDECAR.md` | Engine binaries, launch contract, peer blocklist |
 | `docs/RELEASE_CHECKLIST.md` | Automated + manual release gate |

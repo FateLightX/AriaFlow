@@ -4,6 +4,10 @@ All notable changes to AriaFlow are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Updated bundled `aria2-next` sidecars from 2.5.2 to 2.5.5.
+
 ### Added
 
 - Added automatic Simplified Chinese and English UI localization. Chinese

@@ -5,6 +5,7 @@ final class AppStore: ObservableObject {
     private static let maxHistoryItems = 500
     private static let maxRPCSecretLength = 128
     private static let rpcRestartDelay: Duration = .seconds(1)
+    private static let rpcRecoveryDelay: Duration = .seconds(3)
     private static let persistenceDebounce: Duration = .milliseconds(400)
 
     @Published var connectionState: ConnectionState = .stopped
@@ -47,6 +48,7 @@ final class AppStore: ObservableObject {
     private var historySaveTask: Task<Void, Never>?
     private var pollingTask: Task<Void, Never>?
     private var pendingEngineRestartTask: Task<Void, Never>?
+    private var pendingEngineRecoveryTask: Task<Void, Never>?
     private var consecutivePollFailures = 0
     @Published private(set) var taskListTruncated = false
     private let engineManager = EngineManager()
@@ -232,6 +234,8 @@ final class AppStore: ObservableObject {
     }
 
     func retryEngineConnection() async {
+        pendingEngineRecoveryTask?.cancel()
+        pendingEngineRecoveryTask = nil
         connectionState = .starting
         do {
             let client = makeClient()
@@ -250,6 +254,8 @@ final class AppStore: ObservableObject {
 
     func stopEngine() {
         stopPolling()
+        pendingEngineRecoveryTask?.cancel()
+        pendingEngineRecoveryTask = nil
         engineManager.stop()
         connectionState = .stopped
         engineMessage = L10n.tr("下载引擎已停止")
@@ -273,6 +279,8 @@ final class AppStore: ObservableObject {
         stopPolling()
         pendingEngineRestartTask?.cancel()
         pendingEngineRestartTask = nil
+        pendingEngineRecoveryTask?.cancel()
+        pendingEngineRecoveryTask = nil
         engineManager.stop()
         connectionState = .stopped
         engineMessage = L10n.tr("下载引擎已停止")
@@ -290,6 +298,8 @@ final class AppStore: ObservableObject {
     func restartEngineNowSavingSession() async {
         pendingEngineRestartTask?.cancel()
         pendingEngineRestartTask = nil
+        pendingEngineRecoveryTask?.cancel()
+        pendingEngineRecoveryTask = nil
         await restartEngineSavingSession()
     }
 
@@ -343,12 +353,10 @@ final class AppStore: ObservableObject {
             if softFailure {
                 consecutivePollFailures += 1
                 if consecutivePollFailures >= 3 {
-                    connectionState = .failed
-                    stopPolling()
+                    handleEngineUnavailable(error)
                 }
             } else {
-                connectionState = .failed
-                stopPolling()
+                handleEngineUnavailable(error)
             }
         }
     }
@@ -438,6 +446,30 @@ final class AppStore: ObservableObject {
             guard let self, !Task.isCancelled else { return }
             self.pendingEngineRestartTask = nil
             await self.restartEngineSavingSession()
+        }
+    }
+
+    private func scheduleAutomaticEngineRecovery() {
+        guard pendingEngineRecoveryTask == nil else { return }
+        pendingEngineRecoveryTask = Task { [weak self] in
+            do {
+                try await Task.sleep(for: Self.rpcRecoveryDelay)
+            } catch {
+                return
+            }
+
+            guard let self, !Task.isCancelled else { return }
+            self.pendingEngineRecoveryTask = nil
+            await self.recoverEngineConnection()
+        }
+    }
+
+    private func recoverEngineConnection() async {
+        guard connectionState != .connected, settings.autoConnectEngine else { return }
+        connectionState = .starting
+        await retryEngineConnection()
+        if connectionState != .connected {
+            scheduleAutomaticEngineRecovery()
         }
     }
 
@@ -953,17 +985,17 @@ final class AppStore: ObservableObject {
 
             engineMessage = L10n.tr("正在重启 aria2 引擎以应用新的 RPC 设置")
             _ = try? await client.saveSession()
-            _ = try await client.forceShutdown()
-            try await waitForExternalEngineToStop(client: client)
-            try await waitForManagedEngineToStop()
+            _ = try? await client.forceShutdown()
+            try? await waitForExternalEngineToStop(client: client)
+            try? await waitForManagedEngineToStop()
             engineManager.stop()
         }
 
         if let _ = try? await client.getVersion() {
             engineMessage = L10n.tr("正在重启旧 aria2 引擎以应用 TLS 设置")
             _ = try? await client.saveSession()
-            _ = try await client.forceShutdown()
-            try await waitForExternalEngineToStop(client: client)
+            _ = try? await client.forceShutdown()
+            try? await waitForExternalEngineToStop(client: client)
             try await Task.sleep(for: .seconds(1))
         } else {
             let noSecretClient = Aria2Client(port: settings.rpcPort)
@@ -991,6 +1023,27 @@ final class AppStore: ObservableObject {
                     throw EngineManagerError.processExited(engineManager.recentLogTail())
                 }
                 try await Task.sleep(for: .milliseconds(250))
+            }
+        }
+
+        if engineManager.isRunning {
+            engineMessage = L10n.tr("aria2 RPC 无响应，正在重启引擎")
+            _ = try? await client.saveSession()
+            _ = try? await client.forceShutdown()
+            try? await waitForExternalEngineToStop(client: client)
+            try? await waitForManagedEngineToStop()
+            engineManager.stop()
+            try engineManager.startIfNeeded(settings: settings, rpcSecret: rpcSecret)
+            for _ in 0..<20 {
+                do {
+                    return try await client.getVersion()
+                } catch {
+                    lastError = error
+                    if !engineManager.isRunning {
+                        throw EngineManagerError.processExited(engineManager.recentLogTail())
+                    }
+                    try await Task.sleep(for: .milliseconds(250))
+                }
             }
         }
 
@@ -1030,8 +1083,14 @@ final class AppStore: ObservableObject {
     private func handleRPCError(_ error: Error) {
         engineMessage = error.localizedDescription
         guard !(error is Aria2RPCError) else { return }
+        handleEngineUnavailable(error)
+    }
+
+    private func handleEngineUnavailable(_ error: Error) {
+        engineMessage = error.localizedDescription
         connectionState = .failed
         stopPolling()
+        scheduleAutomaticEngineRecovery()
     }
 
     private func notifyTaskChanges(_ refreshedTasks: [DownloadTask]) {
