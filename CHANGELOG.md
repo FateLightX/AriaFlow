@@ -2,11 +2,14 @@
 
 All notable changes to AriaFlow are documented in this file.
 
-## Unreleased
+## 0.4.0 - 2026-08-11
 
 ### Changed
 
 - Updated bundled `aria2-next` sidecars from 2.5.2 to 2.5.5.
+- Automatic engine recovery now restarts the local managed engine when RPC is
+  unresponsive, so downloads resume without a manual restart.
+- Added AI continuation guidance in `docs/AI_DEVELOPMENT.md`.
 
 ### Added
 

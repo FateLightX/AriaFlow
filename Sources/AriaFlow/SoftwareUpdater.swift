@@ -15,7 +15,7 @@ final class SoftwareUpdater: ObservableObject {
             appName: "AriaFlow",
             bundleIdentifier: "com.ariaflow.desktop",
             repository: "FateLightX/AriaFlow",
-            fallbackVersion: "0.3.5"
+            fallbackVersion: "0.4.0"
         )
     }
 
