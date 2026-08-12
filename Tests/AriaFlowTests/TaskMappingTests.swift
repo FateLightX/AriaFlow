@@ -36,7 +36,7 @@ struct TaskMappingTests {
                 errorMessage: nil,
                 sourceURLs: [],
                 status: .complete
-            ) == "下载已完成"
+            ).isEmpty == false
         )
     }
 

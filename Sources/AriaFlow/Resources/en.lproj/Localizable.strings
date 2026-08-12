@@ -251,3 +251,4 @@
 "默认保存位置" = "Default Save Location";
 "默认分片数" = "Default Split Count";
 "未知错误" = "Unknown error";
+"设置已恢复默认值，正在重启引擎" = "Settings restored; restarting the engine";

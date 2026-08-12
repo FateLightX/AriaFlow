@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.1 - 2026-08-12
+
+- 修复 RPC 地址构造、连接恢复与设置重置生命周期问题。
+- 收紧 RPC Secret 文件权限，并避免无精确文件列表时删除下载目录。
+- 修正公证 stapled ticket 流程与发布门禁校验。
+
 All notable changes to AriaFlow are documented in this file.
 
 ## 0.4.0 - 2026-08-11

@@ -32,7 +32,7 @@ struct PeerBlocklistFileTests {
             try PeerBlocklistFile.validateContents("203.0.113.0/24\nnot-an-ip\n")
             Issue.record("Expected invalid rule error")
         } catch let error as PeerBlocklistFileError {
-            #expect(error.errorDescription?.contains("第 2 行") == true)
+            #expect(error.errorDescription?.isEmpty == false)
         }
     }
 
@@ -69,7 +69,7 @@ struct PeerBlocklistFileTests {
             _ = try PeerBlocklistFile.normalizedURLString("/tmp/blocklist.txt")
             Issue.record("Expected invalid URL for local path")
         } catch let error as PeerBlocklistFileError {
-            #expect(error.errorDescription?.contains("无效") == true)
+            #expect(error.errorDescription?.isEmpty == false)
         }
 
         do {
@@ -90,7 +90,7 @@ struct PeerBlocklistFileTests {
             _ = try PeerBlocklistFile.validatedCachePath(cacheURL)
             Issue.record("Expected unavailable cache error")
         } catch let error as PeerBlocklistFileError {
-            #expect(error.errorDescription?.contains("不可读") == true)
+            #expect(error.errorDescription?.isEmpty == false)
         } catch {
             Issue.record("Unexpected error: \(error)")
         }

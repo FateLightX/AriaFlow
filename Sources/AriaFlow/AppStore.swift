@@ -249,6 +249,9 @@ final class AppStore: ObservableObject {
             engineMessage = error.localizedDescription
             connectionState = .failed
             stopPolling()
+            if settings.autoConnectEngine {
+                scheduleAutomaticEngineRecovery()
+            }
         }
     }
 
@@ -423,14 +426,16 @@ final class AppStore: ObservableObject {
     }
 
     func resetSettings() {
+        let wasRunning = connectionState == .connected || engineManager.isRunning
         setRPCSecret("", restartEngine: false)
         settings = AppSettings()
-        engineMessage = L10n.tr("设置已恢复默认值")
+        rpcPortNeedsRestart = wasRunning
+        engineMessage = wasRunning ? L10n.tr("设置已恢复默认值，正在重启引擎") : L10n.tr("设置已恢复默认值")
         peerBlocklistMessage = L10n.tr("未配置")
-        if connectionState == .connected {
-            Task {
-                await clearPeerBlocklist()
-            }
+        if wasRunning {
+            scheduleAutomaticEngineRestart()
+        } else {
+            Task { await clearPeerBlocklist() }
         }
     }
 
@@ -504,8 +509,7 @@ final class AppStore: ObservableObject {
         let rawPaths = task.localFilePaths
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-        let fallbackPaths = rawPaths.isEmpty ? [task.savePath] : rawPaths
-        let expandedPaths = fallbackPaths
+        let expandedPaths = rawPaths
             .map { resolvedDeletePath($0, task: task) }
             .filter { !$0.isEmpty }
 
@@ -992,6 +996,9 @@ final class AppStore: ObservableObject {
         }
 
         if let _ = try? await client.getVersion() {
+            guard engineManager.isRunning else {
+                throw EngineManagerError.externalRPCInUse(settings.rpcPort)
+            }
             engineMessage = L10n.tr("正在重启旧 aria2 引擎以应用 TLS 设置")
             _ = try? await client.saveSession()
             _ = try? await client.forceShutdown()

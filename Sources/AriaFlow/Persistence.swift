@@ -61,8 +61,10 @@ enum LocalJSONStore {
 enum LocalSecretStore {
     static func load() -> String {
         LocalAppFiles.ensureDirectory()
-        if let secret = try? String(contentsOf: LocalAppFiles.rpcSecretURL, encoding: .utf8)
+        let url = LocalAppFiles.rpcSecretURL
+        if let secret = try? String(contentsOf: url, encoding: .utf8)
             .trimmingCharacters(in: .whitespacesAndNewlines) {
+            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
             return secret
         }
 
@@ -71,6 +73,12 @@ enum LocalSecretStore {
 
     static func save(_ secret: String) {
         LocalAppFiles.ensureDirectory()
-        try? secret.write(to: LocalAppFiles.rpcSecretURL, atomically: true, encoding: .utf8)
+        let url = LocalAppFiles.rpcSecretURL
+        do {
+            try secret.write(to: url, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        } catch {
+            return
+        }
     }
 }
