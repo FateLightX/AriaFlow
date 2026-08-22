@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 - 2026-08-22
+
+- Updated bundled `aria2-next` sidecars to 2.5.6 (arm64 and x86_64).
+
 ## 0.4.1 - 2026-08-12
 
 - 修复 RPC 地址构造、连接恢复与设置重置生命周期问题。
