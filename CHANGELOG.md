@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.4 - 2026-08-24
+
+- 修复 aria2-next 引擎写入用户主目录 `~/.aria2-next` 的问题，DHT/状态数据迁移到 App Support 下。
+
 ## 0.4.3 - 2026-08-24
 
 - Updated bundled `aria2-next` sidecars to 2.5.7 (arm64 and x86_64).
