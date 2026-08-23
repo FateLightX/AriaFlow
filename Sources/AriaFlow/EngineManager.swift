@@ -268,6 +268,13 @@ final class EngineManager {
         process.standardOutput = FileHandle.nullDevice
         process.standardError = FileHandle.nullDevice
 
+        // aria2-next hardcodes its DHT/state dir as $HOME/.aria2-next (libtorrent policy).
+        // Redirect HOME into the app data directory so no stray files are created in the user's home.
+        LocalAppFiles.ensureDirectory()
+        var environment = ProcessInfo.processInfo.environment
+        environment["HOME"] = LocalAppFiles.engineHomeURL.path
+        process.environment = environment
+
         try process.run()
         self.process = process
     }
