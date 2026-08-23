@@ -1,0 +1,50 @@
+name: Auto Update aria2-next
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-update-aria2-next
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: macos-26
+    env:
+      HOME: ${{ github.workspace }}/.build/home
+      XDG_CACHE_HOME: ${{ github.workspace }}/.build/cache
+      CLANG_MODULE_CACHE_PATH: ${{ github.workspace }}/.build/module-cache
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Check aria2-next upstream and apply update
+        id: update
+        run: scripts/update_sidecar.sh
+      - name: No upstream update
+        if: steps.update.outputs.updated == 'false'
+        run: echo "aria2-next 已是最新（${{ steps.update.outputs.engine_version }}），无需更新"
+      - name: Verify release gate
+        if: steps.update.outputs.updated == 'true'
+        run: scripts/verify_release.sh
+      - name: Commit, tag and push
+        if: steps.update.outputs.updated == 'true'
+        env:
+          VERSION: ${{ steps.update.outputs.version }}
+          ENGINE: ${{ steps.update.outputs.engine_version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(release): prepare ${VERSION} (aria2-next ${ENGINE})"
+          git tag -a "v${VERSION}" -m "release v${VERSION} — bundled aria2-next ${ENGINE}"
+          git pull --rebase origin main
+          git push origin main
+          git push origin "v${VERSION}"
+
