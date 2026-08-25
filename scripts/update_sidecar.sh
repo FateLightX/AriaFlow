@@ -93,11 +93,13 @@ for f in ["THIRD_PARTY_NOTICES.md", "scripts/verify_release.sh"]:
     write_if_changed(f, open(f).read().replace(old_arm, new_arm).replace(old_x86, new_x86))
 
 # app version
+# Keep workflow files untouched: the default GITHUB_TOKEN cannot push
+# workflow modifications even when repository Actions permissions are write.
 for f in [
     f"Sources/{app_name}/SettingsViews.swift",
     f"Sources/{app_name}/SoftwareUpdater.swift",
     "scripts/package_app.sh", "scripts/verify_release.sh",
-    "update.json", ".github/workflows/ci.yml",
+    "update.json",
 ]:
     write_if_changed(f, open(f).read().replace(cur_app, new_app))
 
