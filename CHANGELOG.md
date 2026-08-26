@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.6 - 2026-08-26
+
+- Updated bundled `aria2-next` sidecars to 2.6.2 (arm64 and x86_64).
+
 ## 0.4.5 - 2026-08-25
 
 - Updated bundled `aria2-next` sidecars to 2.6.0 (arm64 and x86_64).
