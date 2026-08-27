@@ -1,6 +1,6 @@
 # Sidecar
 
-AriaFlow ships `aria2-next 2.6.2` for arm64 and x86_64. Source URLs, licenses and SHA-256 values are recorded in [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
+AriaFlow ships `aria2-next 2.6.5` for arm64 and x86_64. Source URLs, licenses and SHA-256 values are recorded in [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md).
 
 ## Resource Names
 
