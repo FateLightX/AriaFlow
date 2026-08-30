@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-## aria2-next 2.6.7
+## aria2-next 2.6.8
 
 AriaFlow bundles prebuilt `aria2-next` executables as separate local download-engine components:
 
@@ -8,8 +8,8 @@ AriaFlow bundles prebuilt `aria2-next` executables as separate local download-en
 - `Sources/AriaFlow/Resources/motrix-next-engine-x86_64-apple-darwin`
 
 Upstream project: <https://github.com/AnInsomniacy/aria2-next><br>
-Upstream release: <https://github.com/AnInsomniacy/aria2-next/releases/tag/v2.6.7><br>
-Corresponding source: <https://github.com/AnInsomniacy/aria2-next/archive/refs/tags/v2.6.7.tar.gz>
+Upstream release: <https://github.com/AnInsomniacy/aria2-next/releases/tag/v2.6.8><br>
+Corresponding source: <https://github.com/AnInsomniacy/aria2-next/archive/refs/tags/v2.6.8.tar.gz>
 
 The sidecars are licensed under GNU General Public License version 2. The complete GPL-2.0 text is included at [third_party/aria2-next/COPYING](third_party/aria2-next/COPYING). AriaFlow's Swift source is independently licensed under the MIT License; it communicates with the engine over local JSON-RPC and does not link against the engine.
 
@@ -17,8 +17,8 @@ The sidecars are licensed under GNU General Public License version 2. The comple
 
 | Architecture | Upstream release asset | SHA-256 |
 | --- | --- | --- |
-| Apple Silicon | `aria2-next-2.6.7-macos-arm64` | `1f5ef0f8067f166f2c4dd2711b95f833f3244f5b7fc8998c7b011c23ddfef20c` |
-| Intel | `aria2-next-2.6.7-macos-x86_64` | `6166d6dfd3b5609e6f390043d7a203e7048d6bc78c975bb65c69c7c93b0e4868` |
+| Apple Silicon | `aria2-next-2.6.8-macos-arm64` | `bb9f2afce0a9a614f1cd59a13b14f6d9c7c857f2e2e1d43b8c7e4d7f0c377c6a` |
+| Intel | `aria2-next-2.6.8-macos-x86_64` | `d5734e7de538ca2f2221d28c0eb19e9ca104bab3a67c5d99b9b280ba235fcb9f` |
 
 ### Replacing A Sidecar
 
