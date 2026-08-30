@@ -47,4 +47,7 @@ jobs:
           git pull --rebase origin main
           git push origin main
           git push origin "v${VERSION}"
+          # GITHUB_TOKEN-created tag events do not trigger other workflows.
+          # workflow_dispatch is the supported exception, so publish explicitly.
+          gh workflow run ci.yml --ref "v${VERSION}"
 
