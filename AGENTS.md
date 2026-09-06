@@ -26,7 +26,7 @@ Code and tests are authoritative. Do not recreate removed PRD, prototype, progre
 - UI languages: Simplified Chinese and English; every `zh-*` system language
   uses Chinese, all other languages fall back to English
 - Universal arm64 + x86_64 executable and release bundle
-- Download engine: bundled Aria2 Next 2.7.0 over local JSON-RPC
+- Download engine: bundled Aria2 Next 2.7.1 over local JSON-RPC
 - System `aria2c` / `aria2-next` are fallback only
 - Local-only app: no accounts, cloud sync, or remote aria2 management
 
