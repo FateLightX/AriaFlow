@@ -26,11 +26,11 @@ jobs:
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$(ruby -rjson -e 'print JSON.parse(File.read(ARGV[0])).fetch("version")' update.json)" == "$VERSION" ]]
       - name: Verify package and smoke tests
-        env:
-          APP_VERSION: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name && format('{0}', github.ref_name) || '0.4.4' }}
         run: |
-          if [[ "$APP_VERSION" == v* ]]; then
-            export APP_VERSION="${APP_VERSION#v}"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            export APP_VERSION="${GITHUB_REF_NAME#v}"
+          else
+            export APP_VERSION="$(ruby -rjson -e 'print JSON.parse(File.read(ARGV[0])).fetch("version")' update.json)"
           fi
           scripts/verify_release.sh
       - name: Build architecture-specific release packages
