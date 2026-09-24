@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-APP_VERSION="${APP_VERSION:-0.4.16}"
+APP_VERSION="${APP_VERSION:-0.4.17}"
 APP_DIR="$ROOT_DIR/dist/AriaFlow.app"
 ZIP_PATH="$ROOT_DIR/dist/AriaFlow-$APP_VERSION.zip"
 
@@ -21,8 +21,8 @@ xcrun vtool -show-build "$APP_DIR/Contents/MacOS/AriaFlow" | grep -q "minos 14.0
 file \
     "$APP_DIR/Contents/Resources/motrix-next-engine-aarch64-apple-darwin" \
     "$APP_DIR/Contents/Resources/motrix-next-engine-x86_64-apple-darwin"
-printf '21c327c64549dc15ca1ab70165c56b4aaab4b45724de7d45e3c1b7d541328537  %s\n' "$APP_DIR/Contents/Resources/motrix-next-engine-aarch64-apple-darwin" | shasum -a 256 -c -
-printf 'b5a185a8f7057d10c868fafa6adfde8e619aeee2d7e82964eadf3fb0b9484a22  %s\n' "$APP_DIR/Contents/Resources/motrix-next-engine-x86_64-apple-darwin" | shasum -a 256 -c -
+printf '32abfca1ebeeff020aa47c30e3680c86162ab49703dc4924a0510557b830a69f  %s\n' "$APP_DIR/Contents/Resources/motrix-next-engine-aarch64-apple-darwin" | shasum -a 256 -c -
+printf '4362e5f2b6fd725f21a03c96b7cd0adbec59744c75d9564f386297b99add6435  %s\n' "$APP_DIR/Contents/Resources/motrix-next-engine-x86_64-apple-darwin" | shasum -a 256 -c -
 plutil -lint "$APP_DIR/Contents/Info.plist"
 [[ "$(plutil -extract LSMinimumSystemVersion raw "$APP_DIR/Contents/Info.plist")" == "14.0" ]]
 codesign --verify --deep --strict --verbose=2 "$APP_DIR"
