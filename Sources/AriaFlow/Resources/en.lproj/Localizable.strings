@@ -214,6 +214,8 @@
 "维护" = "Maintenance";
 "自动识别" = "Automatic";
 "菜单栏显示速度" = "Show Speed in Menu Bar";
+"显示状态栏" = "Show Status Bar";
+"开启后在主窗口底部显示连接状态、下载速度与任务统计。" = "When enabled, the connection status, speeds, and task counts are shown at the bottom of the main window.";
 "规则链接" = "Rule URL";
 "设置" = "Settings";
 "设置..." = "Settings...";
