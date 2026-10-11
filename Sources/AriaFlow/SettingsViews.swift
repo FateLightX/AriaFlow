@@ -126,6 +126,10 @@ struct SettingsWindowView: View {
         case .general:
             settingsPanel(title: L10n.tr("启动与常驻"), symbol: "gearshape") {
                 toggleRow(L10n.tr("菜单栏显示速度"), isOn: $store.settings.showSpeedInMenuBar)
+                toggleRow(L10n.tr("显示状态栏"), isOn: $store.settings.showMainWindowStatusBar)
+                Text(L10n.tr("开启后在主窗口底部显示连接状态、下载速度与任务统计。"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 toggleRow(
                     L10n.tr("登录时自动启动"),
                     detail: store.loginItemStatus.detailText,

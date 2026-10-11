@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added a General setting to hide the status bar at the bottom of the main window.
+
 ## 0.4.19 - 2026-10-05
 
 - Updated bundled `aria2-next` sidecars to 2.8.6 (arm64 and x86_64).

@@ -184,8 +184,10 @@ struct ContentAreaView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            Divider()
-            StatusBarView()
+            if store.settings.showMainWindowStatusBar {
+                Divider()
+                StatusBarView()
+            }
         }
         .navigationTitle(store.selectedFilter.title)
     }

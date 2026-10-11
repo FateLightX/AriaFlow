@@ -12,6 +12,7 @@ struct AppSettings: Codable {
     var showMainWindowOnLaunch = true
     var keepRunningAfterMainWindowClose = true
     var hideDockIconInMenuBarMode = true
+    var showMainWindowStatusBar = true
     var btPeerBlocklistURL = ""
     var rpcPort = 6800
 
@@ -27,6 +28,7 @@ struct AppSettings: Codable {
         case showMainWindowOnLaunch
         case keepRunningAfterMainWindowClose
         case hideDockIconInMenuBarMode
+        case showMainWindowStatusBar
         case btPeerBlocklistURL
         case rpcPort
     }
@@ -46,6 +48,7 @@ struct AppSettings: Codable {
         showMainWindowOnLaunch = try container.decodeIfPresent(Bool.self, forKey: .showMainWindowOnLaunch) ?? true
         keepRunningAfterMainWindowClose = try container.decodeIfPresent(Bool.self, forKey: .keepRunningAfterMainWindowClose) ?? true
         hideDockIconInMenuBarMode = try container.decodeIfPresent(Bool.self, forKey: .hideDockIconInMenuBarMode) ?? true
+        showMainWindowStatusBar = try container.decodeIfPresent(Bool.self, forKey: .showMainWindowStatusBar) ?? true
         let decodedURL = try container.decodeIfPresent(String.self, forKey: .btPeerBlocklistURL) ?? ""
         btPeerBlocklistURL = (try? PeerBlocklistFile.normalizedURLString(decodedURL)) ?? ""
         rpcPort = try container.decodeIfPresent(Int.self, forKey: .rpcPort) ?? 6800
@@ -64,6 +67,7 @@ struct AppSettings: Codable {
         try container.encode(showMainWindowOnLaunch, forKey: .showMainWindowOnLaunch)
         try container.encode(keepRunningAfterMainWindowClose, forKey: .keepRunningAfterMainWindowClose)
         try container.encode(hideDockIconInMenuBarMode, forKey: .hideDockIconInMenuBarMode)
+        try container.encode(showMainWindowStatusBar, forKey: .showMainWindowStatusBar)
         try container.encode(btPeerBlocklistURL, forKey: .btPeerBlocklistURL)
         try container.encode(rpcPort, forKey: .rpcPort)
     }
