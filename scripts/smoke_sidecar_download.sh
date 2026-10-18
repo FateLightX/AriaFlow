@@ -105,12 +105,20 @@ for _ in {1..40}; do
     sleep 0.25
 done
 
+EXPECTED_ENGINE_VERSION="$(sed -n 's/^## aria2-next //p' "$ROOT_DIR/THIRD_PARTY_NOTICES.md" | head -1)"
+EXPECTED_ENGINE_VERSION="${EXPECTED_ENGINE_VERSION#v}"
+[[ "$EXPECTED_ENGINE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    echo "cannot parse bundled engine version" >&2
+    exit 1
+}
+
 VERSION_RESPONSE="$(rpc "aria2.getVersion")"
-printf "%s" "$VERSION_RESPONSE" | "$PYTHON_BIN" -c '
-import json, sys
+ENGINE_VERSION="$(printf "%s" "$VERSION_RESPONSE" | EXPECTED_ENGINE_VERSION="$EXPECTED_ENGINE_VERSION" "$PYTHON_BIN" -c '
+import json, os, sys
 version = json.load(sys.stdin)["result"]["version"]
-assert version == "2.8.6", version
-'
+assert version == os.environ["EXPECTED_ENGINE_VERSION"], version
+print(version)
+')"
 
 RELOAD_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"$RELOAD_BLOCKLIST_PATH\"}")"
 printf "%s" "$RELOAD_RESPONSE" | "$PYTHON_BIN" -c '
@@ -126,16 +134,31 @@ assert value == os.environ["RELOAD_BLOCKLIST_PATH"], value
 '
 
 INVALID_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"$INVALID_BLOCKLIST_PATH\"}")"
-printf "%s" "$INVALID_RESPONSE" | "$PYTHON_BIN" -c '
-import json, sys
-assert "error" in json.load(sys.stdin)
+printf "%s" "$INVALID_RESPONSE" | ENGINE_VERSION="$ENGINE_VERSION" "$PYTHON_BIN" -c '
+import json, os, sys
+response = json.load(sys.stdin)
+major = int(os.environ["ENGINE_VERSION"].split(".")[0])
+if major >= 3:
+    assert response.get("result") == "OK", response
+else:
+    assert "error" in response, response
 '
 
-GLOBAL_OPTIONS_RESPONSE="$(rpc "aria2.getGlobalOption")"
-printf "%s" "$GLOBAL_OPTIONS_RESPONSE" | "$PYTHON_BIN" -c '
+SESSION_STATUS_RESPONSE="$(rpc "aria2.getBtSessionStatus")"
+printf "%s" "$SESSION_STATUS_RESPONSE" | ENGINE_VERSION="$ENGINE_VERSION" "$PYTHON_BIN" -c '
 import json, os, sys
-value = json.load(sys.stdin)["result"].get("bt-peer-blocklist")
-assert value == os.environ["RELOAD_BLOCKLIST_PATH"], value
+status = json.load(sys.stdin)["result"]
+if int(os.environ["ENGINE_VERSION"].split(".")[0]) >= 3:
+    rules = status.get("blocklistRules")
+    assert rules == "0", rules
+else:
+    assert "blocklistRules" not in status, status
+'
+
+RELOAD_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"$RELOAD_BLOCKLIST_PATH\"}")"
+printf "%s" "$RELOAD_RESPONSE" | "$PYTHON_BIN" -c '
+import json, sys
+assert json.load(sys.stdin).get("result") == "OK"
 '
 
 CLEAR_RESPONSE="$(rpc "aria2.changeGlobalOption" "{\"bt-peer-blocklist\":\"\"}")"
