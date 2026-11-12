@@ -442,7 +442,7 @@ struct SettingsWindowView: View {
                 }
 
                 settingsRow(L10n.tr("官网"), detail: nil) {
-                    Link("aria2.github.io", destination: aria2WebsiteURL)
+                    Link("Aria2 Next", destination: aria2NextRepositoryURL)
                         .lineLimit(1)
                 }
             }
@@ -457,8 +457,8 @@ struct SettingsWindowView: View {
         URL(string: "https://github.com/FateLightX/AriaFlow")!
     }
 
-    private var aria2WebsiteURL: URL {
-        URL(string: "https://aria2.github.io/")!
+    private var aria2NextRepositoryURL: URL {
+        URL(string: "https://github.com/AnInsomniacy/aria2-next")!
     }
 
     private func settingsPanel<Content: View>(
