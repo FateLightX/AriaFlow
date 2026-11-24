@@ -91,14 +91,22 @@ struct Aria2Client {
     }
 
     func isReachable() async -> Bool {
-        var request = URLRequest(url: endpoint)
-        request.timeoutInterval = 1
+        let request = Self.makeReachabilityRequest(for: endpoint)
         do {
             let (_, response) = try await URLSession.shared.data(for: request)
             return response is HTTPURLResponse
         } catch {
             return false
         }
+    }
+
+    static func makeReachabilityRequest(for endpoint: URL) -> URLRequest {
+        // A cached response must never make a dead localhost port look occupied.
+        URLRequest(
+            url: endpoint,
+            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+            timeoutInterval: 1
+        )
     }
 
     func getGlobalStat() async throws -> Aria2GlobalStat {
